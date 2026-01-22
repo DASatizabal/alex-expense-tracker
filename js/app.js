@@ -1,0 +1,378 @@
+// Main Application Logic for Alex's Expense Tracker
+
+let payments = [];
+
+// DOM Elements
+const expensesContainer = document.getElementById('expenses-container');
+const paymentHistory = document.getElementById('payment-history');
+const monthlyTotalEl = document.getElementById('monthly-total');
+const nextDueEl = document.getElementById('next-due');
+const paymentModal = document.getElementById('payment-modal');
+const paymentForm = document.getElementById('payment-form');
+const closeModalBtn = document.getElementById('close-modal');
+const loadingOverlay = document.getElementById('loading');
+
+// Initialize the app
+async function init() {
+    showLoading(true);
+
+    try {
+        // Load payments from storage
+        payments = await SheetsAPI.getPayments();
+
+        // Render the UI
+        renderExpenseCards();
+        renderPaymentHistory();
+        updateSummary();
+    } catch (error) {
+        console.error('Error initializing app:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Show/hide loading overlay
+function showLoading(show) {
+    loadingOverlay.classList.toggle('active', show);
+}
+
+// Get the current month and year
+function getCurrentMonthYear() {
+    const now = new Date();
+    return { month: now.getMonth(), year: now.getFullYear() };
+}
+
+// Check if a payment exists for an expense in a given month
+function hasPaymentForMonth(expenseId, month, year) {
+    return payments.some(payment => {
+        const paymentDate = new Date(payment.date);
+        return payment.category === expenseId &&
+               paymentDate.getMonth() === month &&
+               paymentDate.getFullYear() === year;
+    });
+}
+
+// Get total payments for a category (for loans and goals)
+function getTotalPaymentsForCategory(expenseId) {
+    return payments
+        .filter(p => p.category === expenseId)
+        .reduce((sum, p) => sum + p.amount, 0);
+}
+
+// Get payment count for a category (for loans)
+function getPaymentCountForCategory(expenseId) {
+    return payments.filter(p => p.category === expenseId).length;
+}
+
+// Calculate status for an expense
+function getExpenseStatus(expense) {
+    const { month, year } = getCurrentMonthYear();
+    const today = new Date();
+    const currentDay = today.getDate();
+
+    if (expense.type === 'goal') {
+        // For goals, check progress
+        const totalSaved = getTotalPaymentsForCategory(expense.id);
+        if (totalSaved >= expense.amount) {
+            return { status: 'paid', label: 'Goal Reached!' };
+        }
+        const daysUntilDue = Math.ceil((expense.dueDate - today) / (1000 * 60 * 60 * 24));
+        if (daysUntilDue < 0) {
+            return { status: 'overdue', label: 'Past Due' };
+        }
+        if (daysUntilDue <= 30) {
+            return { status: 'due-soon', label: `${daysUntilDue} days left` };
+        }
+        return { status: 'pending', label: `${daysUntilDue} days left` };
+    }
+
+    if (expense.type === 'loan') {
+        // For loans, check if paid this month
+        const paymentCount = getPaymentCountForCategory(expense.id);
+        if (paymentCount >= expense.totalPayments) {
+            return { status: 'paid', label: 'Paid Off!' };
+        }
+        if (hasPaymentForMonth(expense.id, month, year)) {
+            return { status: 'paid', label: 'Paid this month' };
+        }
+    } else {
+        // For recurring expenses
+        if (hasPaymentForMonth(expense.id, month, year)) {
+            return { status: 'paid', label: 'Paid this month' };
+        }
+    }
+
+    // Check if due soon or overdue
+    const dueDay = expense.dueDay;
+    const daysUntilDue = dueDay - currentDay;
+
+    if (daysUntilDue < 0) {
+        return { status: 'overdue', label: 'Overdue!' };
+    }
+    if (daysUntilDue <= 7) {
+        return { status: 'due-soon', label: `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}` };
+    }
+    return { status: 'pending', label: `Due on the ${dueDay}${getOrdinalSuffix(dueDay)}` };
+}
+
+// Get ordinal suffix for a number
+function getOrdinalSuffix(n) {
+    const s = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    return s[(v - 20) % 10] || s[v] || s[0];
+}
+
+// Render all expense cards
+function renderExpenseCards() {
+    expensesContainer.innerHTML = '';
+
+    EXPENSES.forEach(expense => {
+        const card = createExpenseCard(expense);
+        expensesContainer.appendChild(card);
+    });
+}
+
+// Create an expense card element
+function createExpenseCard(expense) {
+    const { status, label } = getExpenseStatus(expense);
+    const card = document.createElement('div');
+    card.className = `expense-card status-${status}`;
+
+    let progressHTML = '';
+    let actionButton = '';
+
+    if (expense.type === 'loan') {
+        const paymentCount = getPaymentCountForCategory(expense.id);
+        const percentage = Math.round((paymentCount / expense.totalPayments) * 100);
+        progressHTML = `
+            <div class="progress-section">
+                <div class="progress-label">
+                    <span>${paymentCount} of ${expense.totalPayments} payments</span>
+                    <span>${percentage}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${percentage}%"></div>
+                </div>
+            </div>
+        `;
+        if (paymentCount < expense.totalPayments) {
+            actionButton = `<button class="btn btn-primary" onclick="openPaymentModal('${expense.id}', ${expense.amount})">Mark as Paid</button>`;
+        }
+    } else if (expense.type === 'goal') {
+        const totalSaved = getTotalPaymentsForCategory(expense.id);
+        const percentage = Math.min(100, Math.round((totalSaved / expense.amount) * 100));
+        progressHTML = `
+            <div class="progress-section">
+                <div class="progress-label">
+                    <span>$${totalSaved.toFixed(0)} of $${expense.amount}</span>
+                    <span>${percentage}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${percentage}%"></div>
+                </div>
+            </div>
+        `;
+        if (totalSaved < expense.amount) {
+            actionButton = `<button class="btn btn-success" onclick="openPaymentModal('${expense.id}', null, true)">Add to Savings</button>`;
+        }
+    } else {
+        // Recurring expense
+        if (status !== 'paid') {
+            actionButton = `<button class="btn btn-primary" onclick="openPaymentModal('${expense.id}', ${expense.amount})">Mark as Paid</button>`;
+        }
+    }
+
+    const dueText = expense.type === 'goal'
+        ? `Due: ${expense.dueDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
+        : `Due: ${expense.dueDay}${getOrdinalSuffix(expense.dueDay)} of month`;
+
+    const amountText = expense.type === 'goal'
+        ? `$${expense.amount} total`
+        : `$${expense.amount}/month`;
+
+    card.innerHTML = `
+        <div class="expense-header">
+            <div class="expense-title">
+                <span class="expense-icon">${expense.icon}</span>
+                <span class="expense-name">${expense.name}</span>
+            </div>
+            <span class="expense-amount">${amountText}</span>
+        </div>
+        <div class="expense-details">
+            <div class="expense-due">${dueText}</div>
+            <span class="expense-status">${label}</span>
+        </div>
+        ${progressHTML}
+        <div class="expense-actions">
+            ${actionButton}
+        </div>
+    `;
+
+    return card;
+}
+
+// Render payment history
+function renderPaymentHistory() {
+    paymentHistory.innerHTML = '';
+
+    if (payments.length === 0) {
+        paymentHistory.innerHTML = '<li class="no-payments">No payments recorded yet</li>';
+        return;
+    }
+
+    // Show last 10 payments
+    const recentPayments = payments.slice(0, 10);
+
+    recentPayments.forEach(payment => {
+        const expense = EXPENSES.find(e => e.id === payment.category);
+        const li = document.createElement('li');
+        li.className = 'payment-item';
+
+        const date = new Date(payment.date);
+        const formattedDate = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        });
+
+        li.innerHTML = `
+            <div class="payment-info">
+                <span class="payment-category">${expense ? expense.icon : ''} ${expense ? expense.name : payment.category}</span>
+                <span class="payment-date">${formattedDate}${payment.notes ? ' - ' + payment.notes : ''}</span>
+            </div>
+            <span class="payment-amount">$${payment.amount.toFixed(2)}</span>
+        `;
+
+        paymentHistory.appendChild(li);
+    });
+}
+
+// Update summary section
+function updateSummary() {
+    // Monthly total
+    monthlyTotalEl.textContent = `$${MONTHLY_TOTAL}/month`;
+
+    // Find next due expense
+    const today = new Date();
+    const currentDay = today.getDate();
+    const { month, year } = getCurrentMonthYear();
+
+    let nextDue = null;
+    let minDaysUntil = Infinity;
+
+    EXPENSES.forEach(expense => {
+        if (expense.type === 'goal') return;
+
+        // Skip if already paid this month
+        if (hasPaymentForMonth(expense.id, month, year)) return;
+
+        // For loans, skip if fully paid
+        if (expense.type === 'loan') {
+            const paymentCount = getPaymentCountForCategory(expense.id);
+            if (paymentCount >= expense.totalPayments) return;
+        }
+
+        let daysUntil = expense.dueDay - currentDay;
+        if (daysUntil < 0) {
+            // Already past due this month, consider it urgent
+            daysUntil = -1;
+        }
+
+        if (daysUntil < minDaysUntil) {
+            minDaysUntil = daysUntil;
+            nextDue = expense;
+        }
+    });
+
+    if (nextDue) {
+        if (minDaysUntil < 0) {
+            nextDueEl.textContent = `${nextDue.name} (Overdue!)`;
+            nextDueEl.style.color = '#e74c3c';
+        } else if (minDaysUntil === 0) {
+            nextDueEl.textContent = `${nextDue.name} (Today!)`;
+            nextDueEl.style.color = '#f39c12';
+        } else {
+            nextDueEl.textContent = `${nextDue.name} (in ${minDaysUntil} day${minDaysUntil !== 1 ? 's' : ''})`;
+            nextDueEl.style.color = '';
+        }
+    } else {
+        nextDueEl.textContent = 'All paid!';
+        nextDueEl.style.color = '#27ae60';
+    }
+}
+
+// Open payment modal
+function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
+    const expense = EXPENSES.find(e => e.id === categoryId);
+    if (!expense) return;
+
+    document.getElementById('modal-title').textContent = isSavings
+        ? `Add to ${expense.name} Savings`
+        : `Record ${expense.name} Payment`;
+
+    document.getElementById('payment-category').value = categoryId;
+    document.getElementById('payment-amount').value = defaultAmount || '';
+    document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('payment-notes').value = '';
+
+    paymentModal.classList.add('active');
+}
+
+// Close payment modal
+function closePaymentModal() {
+    paymentModal.classList.remove('active');
+}
+
+// Handle payment form submission
+async function handlePaymentSubmit(e) {
+    e.preventDefault();
+
+    const payment = {
+        category: document.getElementById('payment-category').value,
+        amount: parseFloat(document.getElementById('payment-amount').value),
+        date: document.getElementById('payment-date').value,
+        notes: document.getElementById('payment-notes').value
+    };
+
+    if (!payment.amount || payment.amount <= 0) {
+        alert('Please enter a valid amount');
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        await SheetsAPI.savePayment(payment);
+        payments = await SheetsAPI.getPayments();
+
+        renderExpenseCards();
+        renderPaymentHistory();
+        updateSummary();
+
+        closePaymentModal();
+    } catch (error) {
+        console.error('Error saving payment:', error);
+        alert('Failed to save payment. Please try again.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Event Listeners
+closeModalBtn.addEventListener('click', closePaymentModal);
+paymentModal.addEventListener('click', (e) => {
+    if (e.target === paymentModal) {
+        closePaymentModal();
+    }
+});
+paymentForm.addEventListener('submit', handlePaymentSubmit);
+
+// Keyboard shortcut to close modal
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closePaymentModal();
+    }
+});
+
+// Initialize the app when DOM is ready
+document.addEventListener('DOMContentLoaded', init);
