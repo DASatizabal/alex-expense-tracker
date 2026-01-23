@@ -135,12 +135,23 @@ function getOrdinalSuffix(n) {
     return s[(v - 20) % 10] || s[v] || s[0];
 }
 
-// Sort expenses by due date (soonest first) then by amount (highest first)
+// Sort expenses by: paid status (unpaid first), due date (soonest first), amount (highest first)
 function getSortedExpenses() {
     const today = new Date();
     const currentDay = today.getDate();
 
     return [...EXPENSES].sort((a, b) => {
+        // Get paid status for each expense
+        const statusA = getExpenseStatus(a);
+        const statusB = getExpenseStatus(b);
+        const isPaidA = statusA.status === 'paid';
+        const isPaidB = statusB.status === 'paid';
+
+        // Paid expenses go to the bottom
+        if (isPaidA !== isPaidB) {
+            return isPaidA ? 1 : -1;
+        }
+
         // Calculate days until due for each expense
         const getDaysUntilDue = (expense) => {
             if (expense.type === 'goal') {
