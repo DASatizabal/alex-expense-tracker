@@ -1,6 +1,6 @@
 # Alex's Expense Tracker
 
-**Version 2.2.2** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
+**Version 2.2.3** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
 
 A modern, mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for cloud storage.
 
@@ -89,7 +89,7 @@ const EXPENSES = [
         icon: '\u{1F3D6}',
         amount: 1000,
         type: 'goal',
-        dueDate: new Date('2026-12-01'),  // Target date
+        dueDate: new Date(2026, 11, 1),  // Target date (month is 0-indexed)
         description: 'Vacation fund'
     }
 ];

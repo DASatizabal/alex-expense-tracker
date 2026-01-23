@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.2.2**
+**Current Version: 2.2.3**
 
 ## Quick Links
 
@@ -66,7 +66,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.2.2'
+APP_VERSION: '2.2.3'
 APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwQI_sZ76ZvFCXOdndlyhvI0U2UR3CXdJo_m_1NlCuDAUPS26sYyzzLOl7ZIyKCf_aa/exec'
 USE_LOCAL_STORAGE: false  // true = offline only, false = sync to Sheets
 ```
@@ -91,6 +91,16 @@ google-apps-script.js adds row to Google Sheet
         ↓
 Response returns, UI updates
 ```
+
+---
+
+## Development Notes
+
+**IMPORTANT: Always use LOCAL dates, never UTC**
+- Use `new Date(year, month, day)` (month is 0-indexed) - NOT `new Date('YYYY-MM-DD')`
+- `new Date('2026-07-23')` creates UTC midnight, which becomes the PREVIOUS day in US timezones
+- Use `getTodayDateString()` helper for form date fields
+- Use `parseLocalDate()` to parse "YYYY-MM-DD" strings from storage
 
 ---
 
@@ -156,6 +166,7 @@ GitHub Pages auto-deploys within 1-2 minutes.
 
 | Version | Changes |
 |---------|---------|
+| v2.2.3 | Ensure all dates use local timezone (not UTC) |
 | v2.2.2 | Fix timezone bug in due date causing incorrect paycheck count |
 | v2.2.1 | Fix paycheck count calculation (13 pay periods to due date) |
 | v2.2.0 | Add pay period tracking for savings goals ("Paid this payperiod") |

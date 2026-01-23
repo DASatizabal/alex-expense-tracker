@@ -100,6 +100,15 @@ function parseLocalDate(dateStr) {
     return new Date(year, month - 1, day);
 }
 
+// Get today's date as YYYY-MM-DD string in local timezone
+function getTodayDateString() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 // Format currency with comma separators (hide .00 cents)
 function formatCurrency(amount) {
     // Check if amount has cents
@@ -569,7 +578,7 @@ function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
     }
 
     document.getElementById('payment-amount').value = suggestedAmount || '';
-    document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('payment-date').value = getTodayDateString();
     document.getElementById('payment-notes').value = '';
 
     paymentModal.classList.remove('hidden');
@@ -647,7 +656,7 @@ function openBulkPaymentModal() {
     const { month, year } = getCurrentMonthYear();
 
     // Set date to today
-    document.getElementById('bulk-payment-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('bulk-payment-date').value = getTodayDateString();
     document.getElementById('bulk-payment-notes').value = '';
 
     // Build checkbox list of unpaid recurring/loan expenses
