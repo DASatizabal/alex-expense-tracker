@@ -443,6 +443,8 @@ header h1 {
 
 .expense-check-item {
     display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     align-items: center;
     padding: 12px 10px;
     cursor: pointer;
@@ -457,7 +459,9 @@ header h1 {
 .expense-check-item input[type="checkbox"] {
     width: 18px;
     height: 18px;
+    min-width: 18px;
     margin-right: 12px;
+    flex-shrink: 0;
     cursor: pointer;
     accent-color: var(--primary-color);
 }
