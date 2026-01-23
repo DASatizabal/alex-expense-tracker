@@ -216,7 +216,35 @@ function createExpenseCard(expense) {
         }
     } else if (expense.type === 'goal') {
         const totalSaved = getTotalPaymentsForCategory(expense.id);
+        const remainingBalance = expense.amount - totalSaved;
         const percentage = Math.min(100, Math.round((totalSaved / expense.amount) * 100));
+
+        // Calculate paychecks remaining (every 2 weeks starting 1/22/2026)
+        const paycheckStart = new Date(2026, 0, 22); // Jan 22, 2026
+        const today = new Date();
+        const dueDate = expense.dueDate;
+
+        let paychecksRemaining = 0;
+        let nextPaycheck = new Date(paycheckStart);
+
+        // Find the next paycheck from today
+        while (nextPaycheck < today) {
+            nextPaycheck.setDate(nextPaycheck.getDate() + 14);
+        }
+
+        // Count paychecks until due date
+        while (nextPaycheck <= dueDate) {
+            paychecksRemaining++;
+            nextPaycheck.setDate(nextPaycheck.getDate() + 14);
+        }
+
+        const perPaycheck = paychecksRemaining > 0 ? remainingBalance / paychecksRemaining : remainingBalance;
+
+        let paycheckBreakdown = '';
+        if (remainingBalance > 0 && paychecksRemaining > 0) {
+            paycheckBreakdown = `<div class="paycheck-breakdown">${paychecksRemaining} paychecks left · $${perPaycheck.toFixed(2)}/paycheck</div>`;
+        }
+
         progressHTML = `
             <div class="progress-section">
                 <div class="progress-label">
@@ -226,6 +254,7 @@ function createExpenseCard(expense) {
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: ${percentage}%"></div>
                 </div>
+                ${paycheckBreakdown}
             </div>
         `;
         if (totalSaved < expense.amount) {
