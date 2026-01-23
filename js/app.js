@@ -279,7 +279,7 @@ function createExpenseCard(expense) {
                 </div>
             </div>
         `;
-        if (paymentCount < expense.totalPayments) {
+        if (paymentCount < expense.totalPayments && status !== 'paid') {
             actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', ${expense.amount})">Mark as Paid</button>`;
         }
     } else if (expense.type === 'goal') {
