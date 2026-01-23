@@ -326,25 +326,25 @@ function createExpenseCard(expense) {
         const percentage = Math.min(100, Math.round((totalSaved / expense.amount) * 100));
 
         // Calculate paychecks remaining (every 2 weeks starting 1/22/2026)
+        // Pay periods: 1/22-2/4, 2/5-2/18, ..., 7/9-7/22 (13 total before 7/23 due date)
         const paycheckStart = new Date(2026, 0, 22); // Jan 22, 2026
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Normalize to start of day
         const dueDate = new Date(expense.dueDate);
-        dueDate.setHours(23, 59, 59, 999); // Include the due date fully
+        dueDate.setHours(0, 0, 0, 0);
 
-        let paychecksRemaining = 1;
-        let currentPaycheck = new Date(paycheckStart);
+        const msPerDay = 24 * 60 * 60 * 1000;
 
-        // Find the next paycheck on or after today
-        while (currentPaycheck < today) {
-            currentPaycheck.setDate(currentPaycheck.getDate() + 14);
-        }
+        // Total pay periods from start to due date (not including due date itself)
+        const totalDays = Math.floor((dueDate - paycheckStart) / msPerDay);
+        const totalPeriods = Math.floor(totalDays / 14);
 
-        // Count paychecks from current through due date (inclusive)
-        while (currentPaycheck <= dueDate) {
-            paychecksRemaining++;
-            currentPaycheck.setDate(currentPaycheck.getDate() + 14);
-        }
+        // Current pay period number (1-indexed, 0 if before start)
+        const daysSinceStart = Math.max(0, Math.floor((today - paycheckStart) / msPerDay));
+        const currentPeriod = Math.floor(daysSinceStart / 14) + 1;
+
+        // Paychecks remaining = total periods minus completed periods
+        let paychecksRemaining = Math.max(0, totalPeriods - currentPeriod + 1);
 
         // If paid this pay period, decrement paychecks remaining (current paycheck is done)
         const paidThisPayPeriod = hasPaymentForPayPeriod(expense.id);
@@ -544,22 +544,19 @@ function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
         const totalSaved = getTotalPaymentsForCategory(expense.id);
         const remainingBalance = expense.amount - totalSaved;
 
-        // Calculate paychecks remaining
+        // Calculate paychecks remaining using pay period logic
         const paycheckStart = new Date(2026, 0, 22);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const dueDate = new Date(expense.dueDate);
-        dueDate.setHours(23, 59, 59, 999);
+        dueDate.setHours(0, 0, 0, 0);
 
-        let paychecksRemaining = 0;
-        let currentPaycheck = new Date(paycheckStart);
-        while (currentPaycheck < today) {
-            currentPaycheck.setDate(currentPaycheck.getDate() + 14);
-        }
-        while (currentPaycheck <= dueDate) {
-            paychecksRemaining++;
-            currentPaycheck.setDate(currentPaycheck.getDate() + 14);
-        }
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const totalDays = Math.floor((dueDate - paycheckStart) / msPerDay);
+        const totalPeriods = Math.floor(totalDays / 14);
+        const daysSinceStart = Math.max(0, Math.floor((today - paycheckStart) / msPerDay));
+        const currentPeriod = Math.floor(daysSinceStart / 14) + 1;
+        let paychecksRemaining = Math.max(0, totalPeriods - currentPeriod + 1);
 
         // If paid this pay period, decrement paychecks remaining
         if (hasPaymentForPayPeriod(expense.id) && paychecksRemaining > 0) {
