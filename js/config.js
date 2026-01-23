@@ -1,6 +1,6 @@
 // Configuration for Alex's Expense Tracker
 
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.2.1';
 
 const CONFIG = {
     // Google Apps Script URL
@@ -61,10 +61,10 @@ const EXPENSES = [
         id: 'cruise',
         name: 'Cruise',
         icon: '\u{1F6F3}',
-        amount: 1500,
+        amount: 1371.33,
         type: 'goal',
         dueDate: new Date('2026-07-23'), // Due July 23, 2026
-        description: 'Cruise savings goal - $1,500 by July 23, 2026'
+        description: 'Cruise savings goal - $1,371.33 by July 23, 2026'
     }
 ];
 

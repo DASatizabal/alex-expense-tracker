@@ -222,20 +222,22 @@ function createExpenseCard(expense) {
         // Calculate paychecks remaining (every 2 weeks starting 1/22/2026)
         const paycheckStart = new Date(2026, 0, 22); // Jan 22, 2026
         const today = new Date();
-        const dueDate = expense.dueDate;
+        today.setHours(0, 0, 0, 0); // Normalize to start of day
+        const dueDate = new Date(expense.dueDate);
+        dueDate.setHours(23, 59, 59, 999); // Include the due date fully
 
         let paychecksRemaining = 0;
-        let nextPaycheck = new Date(paycheckStart);
+        let currentPaycheck = new Date(paycheckStart);
 
-        // Find the next paycheck from today
-        while (nextPaycheck < today) {
-            nextPaycheck.setDate(nextPaycheck.getDate() + 14);
+        // Find the next paycheck on or after today
+        while (currentPaycheck < today) {
+            currentPaycheck.setDate(currentPaycheck.getDate() + 14);
         }
 
-        // Count paychecks until due date
-        while (nextPaycheck <= dueDate) {
+        // Count paychecks from current through due date (inclusive)
+        while (currentPaycheck <= dueDate) {
             paychecksRemaining++;
-            nextPaycheck.setDate(nextPaycheck.getDate() + 14);
+            currentPaycheck.setDate(currentPaycheck.getDate() + 14);
         }
 
         const perPaycheck = paychecksRemaining > 0 ? remainingBalance / paychecksRemaining : remainingBalance;
