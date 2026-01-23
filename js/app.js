@@ -19,9 +19,44 @@ let bulkPaymentForm;
 let closeBulkModalBtn;
 let expenseCheckboxList;
 
+// Initialize theme from localStorage or default to dark
+function initTheme() {
+    const savedTheme = localStorage.getItem('alex_expense_theme');
+    const body = document.body;
+    const themeToggle = document.getElementById('theme-toggle');
+
+    // Default to dark mode if no preference saved
+    if (savedTheme === 'light') {
+        body.classList.remove('dark-mode');
+        themeToggle.textContent = '☀️';
+    } else {
+        body.classList.add('dark-mode');
+        themeToggle.textContent = '🌙';
+    }
+}
+
+// Toggle theme between light and dark
+function toggleTheme() {
+    const body = document.body;
+    const themeToggle = document.getElementById('theme-toggle');
+
+    if (body.classList.contains('dark-mode')) {
+        body.classList.remove('dark-mode');
+        themeToggle.textContent = '☀️';
+        localStorage.setItem('alex_expense_theme', 'light');
+    } else {
+        body.classList.add('dark-mode');
+        themeToggle.textContent = '🌙';
+        localStorage.setItem('alex_expense_theme', 'dark');
+    }
+}
+
 // Initialize the app
 async function init() {
     showLoading(true);
+
+    // Initialize theme
+    initTheme();
 
     // Display version
     document.getElementById('version-tag').textContent = 'v' + APP_VERSION;
@@ -631,6 +666,9 @@ document.addEventListener('keydown', (e) => {
 
 // Initialize the app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    // Theme toggle event listener
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
     // Initialize bulk payment DOM elements
     bulkPaymentBtn = document.getElementById('bulk-payment-btn');
     bulkPaymentModal = document.getElementById('bulk-payment-modal');
