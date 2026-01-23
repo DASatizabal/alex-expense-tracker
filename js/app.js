@@ -120,6 +120,40 @@ function hasPaymentForMonth(expenseId, month, year) {
     });
 }
 
+// Get the current pay period (14-day cycles starting 1/22/2026)
+function getCurrentPayPeriod() {
+    const paycheckStart = new Date(2026, 0, 22); // Jan 22, 2026
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Calculate how many complete 14-day periods have passed
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysSinceStart = Math.floor((today - paycheckStart) / msPerDay);
+    const periodNumber = Math.floor(daysSinceStart / 14);
+
+    // Calculate start and end of current period
+    const periodStart = new Date(paycheckStart);
+    periodStart.setDate(periodStart.getDate() + (periodNumber * 14));
+
+    const periodEnd = new Date(periodStart);
+    periodEnd.setDate(periodEnd.getDate() + 13); // 14 days inclusive
+    periodEnd.setHours(23, 59, 59, 999);
+
+    return { start: periodStart, end: periodEnd };
+}
+
+// Check if a payment exists for an expense in the current pay period
+function hasPaymentForPayPeriod(expenseId) {
+    const { start, end } = getCurrentPayPeriod();
+
+    return payments.some(payment => {
+        const paymentDate = parseLocalDate(payment.date);
+        return payment.category === expenseId &&
+               paymentDate >= start &&
+               paymentDate <= end;
+    });
+}
+
 // Get total payments for a category (for loans and goals)
 function getTotalPaymentsForCategory(expenseId) {
     return payments
@@ -143,6 +177,10 @@ function getExpenseStatus(expense) {
         const totalSaved = getTotalPaymentsForCategory(expense.id);
         if (totalSaved >= expense.amount) {
             return { status: 'paid', label: 'Goal Reached!' };
+        }
+        // Check if paid this pay period
+        if (hasPaymentForPayPeriod(expense.id)) {
+            return { status: 'paid', label: 'Paid this payperiod' };
         }
         const daysUntilDue = Math.ceil((expense.dueDate - today) / (1000 * 60 * 60 * 24));
         if (daysUntilDue < 0) {
@@ -308,11 +346,19 @@ function createExpenseCard(expense) {
             currentPaycheck.setDate(currentPaycheck.getDate() + 14);
         }
 
+        // If paid this pay period, decrement paychecks remaining (current paycheck is done)
+        const paidThisPayPeriod = hasPaymentForPayPeriod(expense.id);
+        if (paidThisPayPeriod && paychecksRemaining > 0) {
+            paychecksRemaining--;
+        }
+
         const perPaycheck = paychecksRemaining > 0 ? remainingBalance / paychecksRemaining : remainingBalance;
 
         let paycheckBreakdown = '';
         if (remainingBalance > 0 && paychecksRemaining > 0) {
             paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${paychecksRemaining} paychecks left · $${formatCurrency(perPaycheck)}/paycheck</div>`;
+        } else if (remainingBalance > 0 && paychecksRemaining === 0 && paidThisPayPeriod) {
+            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">$${formatCurrency(remainingBalance)} remaining</div>`;
         }
 
         progressHTML = `
@@ -327,7 +373,7 @@ function createExpenseCard(expense) {
                 ${paycheckBreakdown}
             </div>
         `;
-        if (totalSaved < expense.amount) {
+        if (totalSaved < expense.amount && !paidThisPayPeriod) {
             actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', null, true)">Add to Savings</button>`;
         }
     } else {
@@ -513,6 +559,11 @@ function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
         while (currentPaycheck <= dueDate) {
             paychecksRemaining++;
             currentPaycheck.setDate(currentPaycheck.getDate() + 14);
+        }
+
+        // If paid this pay period, decrement paychecks remaining
+        if (hasPaymentForPayPeriod(expense.id) && paychecksRemaining > 0) {
+            paychecksRemaining--;
         }
 
         if (paychecksRemaining > 0 && remainingBalance > 0) {
