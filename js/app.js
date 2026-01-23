@@ -294,12 +294,12 @@ function createExpenseCard(expense) {
     let progressHTML = '';
     let actionButton = '';
 
-    // Status badge colors
+    // Status badge colors (light/dark mode)
     const statusColors = {
-        'paid': 'bg-emerald-500/20 text-emerald-400',
-        'due-soon': 'bg-yellow-500/20 text-yellow-400',
-        'overdue': 'bg-red-500/20 text-red-400',
-        'pending': 'bg-violet-500/20 text-violet-400'
+        'paid': 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+        'due-soon': 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
+        'overdue': 'bg-red-500/20 text-red-600 dark:text-red-400',
+        'pending': 'bg-violet-500/20 text-violet-600 dark:text-violet-400'
     };
 
     if (expense.type === 'loan') {
@@ -505,17 +505,17 @@ function updateSummary() {
     if (nextDue) {
         if (minDaysUntil < 0) {
             nextDueEl.textContent = `${nextDue.name} (Overdue!)`;
-            nextDueEl.className = 'text-xl font-semibold text-red-400 truncate';
+            nextDueEl.className = 'text-xl font-semibold text-red-600 dark:text-red-400 truncate';
         } else if (minDaysUntil === 0) {
             nextDueEl.textContent = `${nextDue.name} (Today!)`;
-            nextDueEl.className = 'text-xl font-semibold text-yellow-400 truncate';
+            nextDueEl.className = 'text-xl font-semibold text-yellow-600 dark:text-yellow-400 truncate';
         } else {
             nextDueEl.textContent = `${nextDue.name} (in ${minDaysUntil} day${minDaysUntil !== 1 ? 's' : ''})`;
-            nextDueEl.className = 'text-xl font-semibold text-white truncate';
+            nextDueEl.className = 'text-xl font-semibold text-slate-900 dark:text-white truncate';
         }
     } else {
         nextDueEl.textContent = 'All paid!';
-        nextDueEl.className = 'text-xl font-semibold text-emerald-400 truncate';
+        nextDueEl.className = 'text-xl font-semibold text-emerald-600 dark:text-emerald-400 truncate';
     }
 }
 
