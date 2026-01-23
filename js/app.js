@@ -580,7 +580,18 @@ function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
         }
     }
 
-    document.getElementById('payment-amount').value = suggestedAmount || '';
+    const amountInput = document.getElementById('payment-amount');
+    amountInput.value = suggestedAmount || '';
+
+    // Set max limit for goals based on remaining balance
+    if (expense.type === 'goal') {
+        const totalSaved = getTotalPaymentsForCategory(expense.id);
+        const remainingBalance = Math.max(0, expense.amount - totalSaved);
+        amountInput.max = remainingBalance.toFixed(2);
+    } else {
+        amountInput.removeAttribute('max');
+    }
+
     document.getElementById('payment-date').value = getTodayDateString();
     document.getElementById('payment-notes').value = '';
 
@@ -608,6 +619,17 @@ async function handlePaymentSubmit(e) {
     if (!payment.amount || payment.amount <= 0) {
         showToast('Please enter a valid amount', 'error');
         return;
+    }
+
+    // Validate goal payments don't exceed remaining balance
+    const expense = EXPENSES.find(e => e.id === payment.category);
+    if (expense && expense.type === 'goal') {
+        const totalSaved = getTotalPaymentsForCategory(expense.id);
+        const remainingBalance = expense.amount - totalSaved;
+        if (payment.amount > remainingBalance) {
+            showToast(`Amount exceeds remaining balance ($${formatCurrency(remainingBalance)})`, 'error');
+            return;
+        }
     }
 
     showLoading(true);
