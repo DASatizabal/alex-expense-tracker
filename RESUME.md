@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.2.5**
+**Current Version: 2.3.0**
 
 ## Quick Links
 
@@ -66,7 +66,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.2.5'
+APP_VERSION: '2.3.0'
 APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwQI_sZ76ZvFCXOdndlyhvI0U2UR3CXdJo_m_1NlCuDAUPS26sYyzzLOl7ZIyKCf_aa/exec'
 USE_LOCAL_STORAGE: false  // true = offline only, false = sync to Sheets
 ```
@@ -168,6 +168,7 @@ GitHub Pages auto-deploys within 1-2 minutes.
 
 | Version | Changes |
 |---------|---------|
+| v2.3.0 | Add credit/past due tracking for recurring expenses |
 | v2.2.5 | Limit goal payments to remaining balance |
 | v2.2.4 | Fix DST bug in paycheck calculation (use Date.UTC for math) |
 | v2.2.3 | Ensure all dates use local timezone (not UTC) |

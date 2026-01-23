@@ -175,6 +175,35 @@ function getPaymentCountForCategory(expenseId) {
     return payments.filter(p => p.category === expenseId).length;
 }
 
+// Calculate credit or past due amount for recurring expenses
+// Based on months elapsed since Jan 2026
+function getCreditOrPastDue(expense) {
+    if (expense.type !== 'recurring') return { credit: 0, pastDue: 0 };
+
+    const today = new Date();
+    const startYear = 2026;
+    const startMonth = 0; // January
+
+    // Calculate months elapsed (Jan 2026 = month 1)
+    const monthsElapsed = (today.getFullYear() - startYear) * 12 + (today.getMonth() - startMonth) + 1;
+
+    // Expected total based on months elapsed
+    const expectedTotal = monthsElapsed * expense.amount;
+
+    // Actual total paid
+    const actualTotal = getTotalPaymentsForCategory(expense.id);
+
+    // Calculate difference
+    const difference = actualTotal - expectedTotal;
+
+    if (difference > 0) {
+        return { credit: difference, pastDue: 0 };
+    } else if (difference < 0) {
+        return { credit: 0, pastDue: Math.abs(difference) };
+    }
+    return { credit: 0, pastDue: 0 };
+}
+
 // Calculate status for an expense
 function getExpenseStatus(expense) {
     const { month, year } = getCurrentMonthYear();
@@ -404,13 +433,27 @@ function createExpenseCard(expense) {
         ? `$${formatCurrency(expense.amount)} total`
         : `$${formatCurrency(expense.amount)}/month`;
 
+    // Calculate credit or past due for recurring expenses
+    let creditPastDueHTML = '';
+    if (expense.type === 'recurring') {
+        const { credit, pastDue } = getCreditOrPastDue(expense);
+        if (credit > 0) {
+            creditPastDueHTML = `<div class="text-xs text-emerald-400">$${formatCurrency(credit)} Credit</div>`;
+        } else if (pastDue > 0) {
+            creditPastDueHTML = `<div class="text-xs text-red-400">$${formatCurrency(pastDue)} Past Due!</div>`;
+        }
+    }
+
     card.innerHTML = `
         <div class="flex justify-between items-start mb-3">
             <div class="flex items-center gap-3">
                 <span class="text-2xl">${expense.icon}</span>
                 <span class="font-semibold text-white">${expense.name}</span>
             </div>
-            <span class="text-lg font-bold text-violet-400">${amountText}</span>
+            <div class="text-right">
+                <span class="text-lg font-bold text-violet-400">${amountText}</span>
+                ${creditPastDueHTML}
+            </div>
         </div>
         <div class="flex items-center gap-3">
             <span class="text-sm text-slate-400">${dueText}</span>
