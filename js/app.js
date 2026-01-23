@@ -917,6 +917,13 @@ document.addEventListener('DOMContentLoaded', () => {
         bulkPaymentForm.addEventListener('submit', handleBulkPaymentSubmit);
     }
 
+    // Auto-select amount fields on focus (event delegation for dynamic inputs)
+    document.addEventListener('focus', (e) => {
+        if (e.target.type === 'number') {
+            e.target.select();
+        }
+    }, true);
+
     // Initialize Lucide icons
     initLucideIcons();
 
