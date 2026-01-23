@@ -523,22 +523,30 @@ function updateSummary() {
     const currentDay = today.getDate();
     const { month, year } = getCurrentMonthYear();
 
-    // Calculate remaining amount to pay this month
+    // Calculate remaining amount to pay (including past due)
     let remainingAmount = 0;
     EXPENSES.forEach(expense => {
         // Skip goals
         if (expense.type === 'goal') return;
 
-        // Skip if already paid this month
-        if (hasPaymentForMonth(expense.id, month, year)) return;
+        // For recurring expenses, include past due amounts
+        if (expense.type === 'recurring') {
+            const { pastDue } = getCreditOrPastDue(expense);
+            if (pastDue > 0) {
+                remainingAmount += pastDue;
+            } else if (!hasPaymentForMonth(expense.id, month, year)) {
+                remainingAmount += expense.amount;
+            }
+            return;
+        }
 
-        // For loans, skip if fully paid
+        // For loans, skip if fully paid or paid this month
         if (expense.type === 'loan') {
             const paymentCount = getPaymentCountForCategory(expense.id);
             if (paymentCount >= expense.totalPayments) return;
+            if (hasPaymentForMonth(expense.id, month, year)) return;
+            remainingAmount += expense.amount;
         }
-
-        remainingAmount += expense.amount;
     });
 
     monthlyTotalEl.textContent = `$${formatCurrency(remainingAmount)}`;
