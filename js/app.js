@@ -135,11 +135,40 @@ function getOrdinalSuffix(n) {
     return s[(v - 20) % 10] || s[v] || s[0];
 }
 
+// Sort expenses by due date (soonest first) then by amount (highest first)
+function getSortedExpenses() {
+    const today = new Date();
+    const currentDay = today.getDate();
+
+    return [...EXPENSES].sort((a, b) => {
+        // Calculate days until due for each expense
+        const getDaysUntilDue = (expense) => {
+            if (expense.type === 'goal') {
+                return Math.ceil((expense.dueDate - today) / (1000 * 60 * 60 * 24));
+            }
+            const daysUntil = expense.dueDay - currentDay;
+            // If already past due this month, treat as most urgent (negative)
+            return daysUntil;
+        };
+
+        const daysA = getDaysUntilDue(a);
+        const daysB = getDaysUntilDue(b);
+
+        // Sort by days until due (soonest first, overdue at top)
+        if (daysA !== daysB) {
+            return daysA - daysB;
+        }
+
+        // If same due date, sort by amount (highest first)
+        return b.amount - a.amount;
+    });
+}
+
 // Render all expense cards
 function renderExpenseCards() {
     expensesContainer.innerHTML = '';
 
-    EXPENSES.forEach(expense => {
+    getSortedExpenses().forEach(expense => {
         const card = createExpenseCard(expense);
         expensesContainer.appendChild(card);
     });
@@ -408,7 +437,7 @@ function openBulkPaymentModal() {
     // Build checkbox list of unpaid recurring/loan expenses
     expenseCheckboxList.innerHTML = '';
 
-    EXPENSES.forEach(expense => {
+    getSortedExpenses().forEach(expense => {
         // Skip goals - they have variable amounts
         if (expense.type === 'goal') return;
 
