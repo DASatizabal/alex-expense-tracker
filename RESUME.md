@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.3.4**
+**Current Version: 2.3.5**
 
 ## Quick Links
 
@@ -66,7 +66,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.3.4'
+APP_VERSION: '2.3.5'
 APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwQI_sZ76ZvFCXOdndlyhvI0U2UR3CXdJo_m_1NlCuDAUPS26sYyzzLOl7ZIyKCf_aa/exec'
 USE_LOCAL_STORAGE: false  // true = offline only, false = sync to Sheets
 ```
@@ -168,6 +168,7 @@ GitHub Pages auto-deploys within 1-2 minutes.
 
 | Version | Changes |
 |---------|---------|
+| v2.3.5 | Editable amounts in bulk payment modal with smart defaults |
 | v2.3.4 | Allow bulk payments to past due expenses |
 | v2.3.3 | Show past due expense in "Next Due" instead of "All paid!" |
 | v2.3.2 | Include past due amounts in "Remaining This Month" total |

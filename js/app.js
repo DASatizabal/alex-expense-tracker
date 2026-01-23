@@ -776,13 +776,30 @@ function openBulkPaymentModal() {
             if (hasPaymentForMonth(expense.id, month, year)) return;
         }
 
-        const checkItem = document.createElement('label');
-        checkItem.className = 'flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors';
+        // Calculate default amount: past due amount if past due, else monthly amount
+        let defaultAmount = expense.amount;
+        let isPastDue = false;
+        if (expense.type === 'recurring') {
+            const { pastDue } = getCreditOrPastDue(expense);
+            if (pastDue > 0) {
+                defaultAmount = pastDue;
+                isPastDue = true;
+            }
+        }
+
+        const checkItem = document.createElement('div');
+        checkItem.className = 'flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors';
         checkItem.innerHTML = `
-            <input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}" class="w-5 h-5 rounded border-white/20 bg-white/5 text-violet-600 focus:ring-violet-500 focus:ring-offset-0">
-            <span class="text-lg">${expense.icon}</span>
-            <span class="flex-1 text-white">${expense.name}</span>
-            <span class="font-semibold text-violet-400">$${formatCurrency(expense.amount)}</span>
+            <input type="checkbox" name="expense" value="${expense.id}" id="bulk-check-${expense.id}" class="w-5 h-5 rounded border-white/20 bg-white/5 text-violet-600 focus:ring-violet-500 focus:ring-offset-0">
+            <label for="bulk-check-${expense.id}" class="flex items-center gap-2 flex-1 cursor-pointer">
+                <span class="text-lg">${expense.icon}</span>
+                <span class="text-white">${expense.name}</span>
+                ${isPastDue ? '<span class="text-xs text-red-400">(Past Due)</span>' : ''}
+            </label>
+            <div class="flex items-center gap-1">
+                <span class="text-violet-400">$</span>
+                <input type="number" step="0.01" min="0.01" value="${defaultAmount.toFixed(2)}" data-expense-id="${expense.id}" class="bulk-amount-input w-20 px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-right text-violet-400 font-semibold focus:outline-none focus:border-violet-500">
+            </div>
         `;
         expenseCheckboxList.appendChild(checkItem);
     });
@@ -820,9 +837,19 @@ async function handleBulkPaymentSubmit(e) {
     try {
         // Save each selected payment
         for (const checkbox of checkboxes) {
+            const expenseId = checkbox.value;
+            const amountInput = expenseCheckboxList.querySelector(`input[data-expense-id="${expenseId}"]`);
+            const amount = parseFloat(amountInput.value);
+
+            if (!amount || amount <= 0) {
+                showToast(`Invalid amount for ${expenseId}`, 'error');
+                showLoading(false);
+                return;
+            }
+
             const payment = {
-                category: checkbox.value,
-                amount: parseFloat(checkbox.dataset.amount),
+                category: expenseId,
+                amount: amount,
                 date: date,
                 notes: notes
             };
