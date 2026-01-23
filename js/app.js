@@ -51,46 +51,9 @@ function initLucideIcons() {
     }
 }
 
-// Initialize theme from localStorage or default to dark
-function initTheme() {
-    const savedTheme = localStorage.getItem('alex_expense_theme');
-    const body = document.body;
-    const themeToggle = document.getElementById('theme-toggle');
-
-    // Default to dark mode if no preference saved
-    if (savedTheme === 'light') {
-        body.classList.remove('dark');
-        themeToggle.innerHTML = '<i data-lucide="sun" class="w-5 h-5"></i>';
-    } else {
-        body.classList.add('dark');
-        themeToggle.innerHTML = '<i data-lucide="moon" class="w-5 h-5"></i>';
-    }
-    initLucideIcons();
-}
-
-// Toggle theme between light and dark
-function toggleTheme() {
-    const body = document.body;
-    const themeToggle = document.getElementById('theme-toggle');
-
-    if (body.classList.contains('dark')) {
-        body.classList.remove('dark');
-        themeToggle.innerHTML = '<i data-lucide="sun" class="w-5 h-5"></i>';
-        localStorage.setItem('alex_expense_theme', 'light');
-    } else {
-        body.classList.add('dark');
-        themeToggle.innerHTML = '<i data-lucide="moon" class="w-5 h-5"></i>';
-        localStorage.setItem('alex_expense_theme', 'dark');
-    }
-    initLucideIcons();
-}
-
 // Initialize the app
 async function init() {
     showLoading(true);
-
-    // Initialize theme
-    initTheme();
 
     // Display version
     document.getElementById('version-tag').textContent = 'v' + APP_VERSION;
@@ -289,17 +252,17 @@ function createExpenseCard(expense) {
                              status === 'due-soon' ? 'expense-card-due-soon' :
                              status === 'overdue' ? 'expense-card-overdue' : 'expense-card-pending';
 
-    card.className = `group relative bg-black/5 dark:bg-white/5 backdrop-blur-xl rounded-2xl p-5 border-l-4 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-all duration-300 ${borderColorClass}`;
+    card.className = `group relative bg-white/5 backdrop-blur-xl rounded-2xl p-5 border-l-4 border border-white/10 hover:bg-white/10 transition-all duration-300 ${borderColorClass}`;
 
     let progressHTML = '';
     let actionButton = '';
 
-    // Status badge colors (light/dark mode)
+    // Status badge colors
     const statusColors = {
-        'paid': 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400',
-        'due-soon': 'bg-yellow-500/20 text-yellow-600 dark:text-yellow-400',
-        'overdue': 'bg-red-500/20 text-red-600 dark:text-red-400',
-        'pending': 'bg-violet-500/20 text-violet-600 dark:text-violet-400'
+        'paid': 'bg-emerald-500/20 text-emerald-400',
+        'due-soon': 'bg-yellow-500/20 text-yellow-400',
+        'overdue': 'bg-red-500/20 text-red-400',
+        'pending': 'bg-violet-500/20 text-violet-400'
     };
 
     if (expense.type === 'loan') {
@@ -307,11 +270,11 @@ function createExpenseCard(expense) {
         const percentage = Math.round((paymentCount / expense.totalPayments) * 100);
         progressHTML = `
             <div class="mt-4">
-                <div class="flex justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
+                <div class="flex justify-between text-sm text-slate-400 mb-2">
                     <span>${paymentCount} of ${expense.totalPayments} payments</span>
                     <span>${percentage}%</span>
                 </div>
-                <div class="h-2 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
                     <div class="h-full progress-gradient rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
                 </div>
             </div>
@@ -354,11 +317,11 @@ function createExpenseCard(expense) {
 
         progressHTML = `
             <div class="mt-4">
-                <div class="flex justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
+                <div class="flex justify-between text-sm text-slate-400 mb-2">
                     <span>$${formatCurrency(totalSaved)} of $${formatCurrency(expense.amount)}</span>
                     <span>${percentage}%</span>
                 </div>
-                <div class="h-2 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
                     <div class="h-full progress-gradient rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
                 </div>
                 ${paycheckBreakdown}
@@ -386,12 +349,12 @@ function createExpenseCard(expense) {
         <div class="flex justify-between items-start mb-3">
             <div class="flex items-center gap-3">
                 <span class="text-2xl">${expense.icon}</span>
-                <span class="font-semibold text-slate-900 dark:text-white">${expense.name}</span>
+                <span class="font-semibold text-white">${expense.name}</span>
             </div>
-            <span class="text-lg font-bold text-violet-600 dark:text-violet-400">${amountText}</span>
+            <span class="text-lg font-bold text-violet-400">${amountText}</span>
         </div>
         <div class="flex items-center gap-3">
-            <span class="text-sm text-slate-500 dark:text-slate-400">${dueText}</span>
+            <span class="text-sm text-slate-400">${dueText}</span>
             <span class="px-2.5 py-1 text-xs font-medium rounded-full ${statusColors[status]}">${label}</span>
         </div>
         ${progressHTML}
@@ -406,7 +369,7 @@ function renderPaymentHistory() {
     paymentHistory.innerHTML = '';
 
     if (payments.length === 0) {
-        paymentHistory.innerHTML = '<li class="px-6 py-8 text-center text-slate-500 dark:text-slate-500">No payments recorded yet</li>';
+        paymentHistory.innerHTML = '<li class="px-6 py-8 text-center text-slate-500">No payments recorded yet</li>';
         return;
     }
 
@@ -416,7 +379,7 @@ function renderPaymentHistory() {
     recentPayments.forEach(payment => {
         const expense = EXPENSES.find(e => e.id === payment.category);
         const li = document.createElement('li');
-        li.className = 'flex items-center justify-between px-6 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors';
+        li.className = 'flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors';
 
         const date = parseLocalDate(payment.date);
         const formattedDate = date.toLocaleDateString('en-US', {
@@ -429,12 +392,12 @@ function renderPaymentHistory() {
             <div class="flex items-center gap-3">
                 <span class="text-xl">${expense ? expense.icon : ''}</span>
                 <div>
-                    <div class="font-medium text-slate-900 dark:text-white">${expense ? expense.name : payment.category}</div>
+                    <div class="font-medium text-white">${expense ? expense.name : payment.category}</div>
                     <div class="text-sm text-slate-500">${formattedDate}${payment.notes ? ' · ' + payment.notes : ''}</div>
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <span class="font-semibold text-emerald-600 dark:text-emerald-400">$${formatCurrency(payment.amount)}</span>
+                <span class="font-semibold text-emerald-400">$${formatCurrency(payment.amount)}</span>
                 <button class="p-2 hover:bg-red-500/20 rounded-lg transition-colors group" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">
                     <i data-lucide="trash-2" class="w-4 h-4 text-slate-500 group-hover:text-red-400"></i>
                 </button>
@@ -474,7 +437,6 @@ function updateSummary() {
     monthlyTotalEl.textContent = `$${formatCurrency(remainingAmount)}`;
 
     // Find next due expense
-
     let nextDue = null;
     let minDaysUntil = Infinity;
 
@@ -505,17 +467,17 @@ function updateSummary() {
     if (nextDue) {
         if (minDaysUntil < 0) {
             nextDueEl.textContent = `${nextDue.name} (Overdue!)`;
-            nextDueEl.className = 'text-xl font-semibold text-red-600 dark:text-red-400 truncate';
+            nextDueEl.className = 'text-xl font-semibold text-red-400 truncate';
         } else if (minDaysUntil === 0) {
             nextDueEl.textContent = `${nextDue.name} (Today!)`;
-            nextDueEl.className = 'text-xl font-semibold text-yellow-600 dark:text-yellow-400 truncate';
+            nextDueEl.className = 'text-xl font-semibold text-yellow-400 truncate';
         } else {
             nextDueEl.textContent = `${nextDue.name} (in ${minDaysUntil} day${minDaysUntil !== 1 ? 's' : ''})`;
-            nextDueEl.className = 'text-xl font-semibold text-slate-900 dark:text-white truncate';
+            nextDueEl.className = 'text-xl font-semibold text-white truncate';
         }
     } else {
         nextDueEl.textContent = 'All paid!';
-        nextDueEl.className = 'text-xl font-semibold text-emerald-600 dark:text-emerald-400 truncate';
+        nextDueEl.className = 'text-xl font-semibold text-emerald-400 truncate';
     }
 }
 
@@ -657,19 +619,19 @@ function openBulkPaymentModal() {
         }
 
         const checkItem = document.createElement('label');
-        checkItem.className = 'flex items-center gap-3 p-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors';
+        checkItem.className = 'flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors';
         checkItem.innerHTML = `
-            <input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}" class="w-5 h-5 rounded border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5 text-violet-600 focus:ring-violet-500 focus:ring-offset-0">
+            <input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}" class="w-5 h-5 rounded border-white/20 bg-white/5 text-violet-600 focus:ring-violet-500 focus:ring-offset-0">
             <span class="text-lg">${expense.icon}</span>
-            <span class="flex-1 text-slate-900 dark:text-white">${expense.name}</span>
-            <span class="font-semibold text-violet-600 dark:text-violet-400">$${formatCurrency(expense.amount)}</span>
+            <span class="flex-1 text-white">${expense.name}</span>
+            <span class="font-semibold text-violet-400">$${formatCurrency(expense.amount)}</span>
         `;
         expenseCheckboxList.appendChild(checkItem);
     });
 
     // Show message if no unpaid expenses
     if (expenseCheckboxList.children.length === 0) {
-        expenseCheckboxList.innerHTML = '<p class="text-center text-slate-500 dark:text-slate-500 py-4">All expenses are paid for this month!</p>';
+        expenseCheckboxList.innerHTML = '<p class="text-center text-slate-500 py-4">All expenses are paid for this month!</p>';
     }
 
     bulkPaymentModal.classList.remove('hidden');
@@ -745,9 +707,6 @@ document.addEventListener('keydown', (e) => {
 
 // Initialize the app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    // Theme toggle event listener
-    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-
     // Initialize bulk payment DOM elements
     bulkPaymentBtn = document.getElementById('bulk-payment-btn');
     bulkPaymentModal = document.getElementById('bulk-payment-modal');
