@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.2.3**
+**Current Version: 2.2.4**
 
 ## Quick Links
 
@@ -66,7 +66,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.2.3'
+APP_VERSION: '2.2.4'
 APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwQI_sZ76ZvFCXOdndlyhvI0U2UR3CXdJo_m_1NlCuDAUPS26sYyzzLOl7ZIyKCf_aa/exec'
 USE_LOCAL_STORAGE: false  // true = offline only, false = sync to Sheets
 ```
@@ -96,11 +96,13 @@ Response returns, UI updates
 
 ## Development Notes
 
-**IMPORTANT: Always use LOCAL dates, never UTC**
+**IMPORTANT: Date handling rules**
 - Use `new Date(year, month, day)` (month is 0-indexed) - NOT `new Date('YYYY-MM-DD')`
 - `new Date('2026-07-23')` creates UTC midnight, which becomes the PREVIOUS day in US timezones
 - Use `getTodayDateString()` helper for form date fields
 - Use `parseLocalDate()` to parse "YYYY-MM-DD" strings from storage
+- **For date math spanning months, use `Date.UTC()` to avoid Daylight Saving Time bugs**
+  - DST causes 1 hour shift, making `Math.floor(days)` off by 1 day
 
 ---
 
@@ -166,6 +168,7 @@ GitHub Pages auto-deploys within 1-2 minutes.
 
 | Version | Changes |
 |---------|---------|
+| v2.2.4 | Fix DST bug in paycheck calculation (use Date.UTC for math) |
 | v2.2.3 | Ensure all dates use local timezone (not UTC) |
 | v2.2.2 | Fix timezone bug in due date causing incorrect paycheck count |
 | v2.2.1 | Fix paycheck count calculation (13 pay periods to due date) |

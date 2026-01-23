@@ -342,14 +342,18 @@ function createExpenseCard(expense) {
         const dueDate = new Date(expense.dueDate);
         dueDate.setHours(0, 0, 0, 0);
 
+        // Use UTC to avoid Daylight Saving Time issues in date math
+        const startUTC = Date.UTC(2026, 0, 22);
+        const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+        const dueUTC = Date.UTC(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
         const msPerDay = 24 * 60 * 60 * 1000;
 
         // Total pay periods from start to due date (not including due date itself)
-        const totalDays = Math.floor((dueDate - paycheckStart) / msPerDay);
+        const totalDays = Math.floor((dueUTC - startUTC) / msPerDay);
         const totalPeriods = Math.floor(totalDays / 14);
 
         // Current pay period number (1-indexed, 0 if before start)
-        const daysSinceStart = Math.max(0, Math.floor((today - paycheckStart) / msPerDay));
+        const daysSinceStart = Math.max(0, Math.floor((todayUTC - startUTC) / msPerDay));
         const currentPeriod = Math.floor(daysSinceStart / 14) + 1;
 
         // Paychecks remaining = total periods minus completed periods
@@ -553,17 +557,16 @@ function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
         const totalSaved = getTotalPaymentsForCategory(expense.id);
         const remainingBalance = expense.amount - totalSaved;
 
-        // Calculate paychecks remaining using pay period logic
-        const paycheckStart = new Date(2026, 0, 22);
+        // Calculate paychecks remaining using pay period logic (UTC to avoid DST issues)
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
         const dueDate = new Date(expense.dueDate);
-        dueDate.setHours(0, 0, 0, 0);
-
+        const startUTC = Date.UTC(2026, 0, 22);
+        const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+        const dueUTC = Date.UTC(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
         const msPerDay = 24 * 60 * 60 * 1000;
-        const totalDays = Math.floor((dueDate - paycheckStart) / msPerDay);
+        const totalDays = Math.floor((dueUTC - startUTC) / msPerDay);
         const totalPeriods = Math.floor(totalDays / 14);
-        const daysSinceStart = Math.max(0, Math.floor((today - paycheckStart) / msPerDay));
+        const daysSinceStart = Math.max(0, Math.floor((todayUTC - startUTC) / msPerDay));
         const currentPeriod = Math.floor(daysSinceStart / 14) + 1;
         let paychecksRemaining = Math.max(0, totalPeriods - currentPeriod + 1);
 
