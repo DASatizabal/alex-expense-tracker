@@ -253,7 +253,10 @@ function renderPaymentHistory() {
                 <span class="payment-category">${expense ? expense.icon : ''} ${expense ? expense.name : payment.category}</span>
                 <span class="payment-date">${formattedDate}${payment.notes ? ' - ' + payment.notes : ''}</span>
             </div>
-            <span class="payment-amount">$${payment.amount.toFixed(2)}</span>
+            <div class="payment-actions">
+                <span class="payment-amount">$${payment.amount.toFixed(2)}</span>
+                <button class="btn-delete" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">&times;</button>
+            </div>
         `;
 
         paymentHistory.appendChild(li);
@@ -366,6 +369,29 @@ async function handlePaymentSubmit(e) {
     } catch (error) {
         console.error('Error saving payment:', error);
         alert('Failed to save payment. Please try again.');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Handle payment deletion
+async function handleDeletePayment(paymentId) {
+    if (!confirm('Are you sure you want to delete this payment?')) {
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        await SheetsAPI.deletePayment(paymentId);
+        payments = await SheetsAPI.getPayments();
+
+        renderExpenseCards();
+        renderPaymentHistory();
+        updateSummary();
+    } catch (error) {
+        console.error('Error deleting payment:', error);
+        alert('Failed to delete payment. Please try again.');
     } finally {
         showLoading(false);
     }

@@ -292,9 +292,35 @@ header h1 {
     color: var(--text-light);
 }
 
+.payment-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .payment-amount {
     font-weight: 600;
     color: var(--success-color);
+}
+
+.btn-delete {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background-color: transparent;
+    color: var(--text-light);
+    font-size: 1.2rem;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+    background-color: rgba(231, 76, 60, 0.15);
+    color: var(--danger-color);
 }
 
 .no-payments {
