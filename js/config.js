@@ -1,8 +1,16 @@
 // Configuration for Alex's Expense Tracker
 
-const APP_VERSION = '2.3.6';
+const APP_VERSION = '2.4.0';
 
 const CONFIG = {
+    // Encryption settings for password protection
+    ENCRYPTION: {
+        ALGORITHM: 'AES-GCM',
+        KEY_LENGTH: 256,
+        PBKDF2_ITERATIONS: 100000,
+        AUTO_LOCK_MINUTES: 5
+    },
+
     // Google Apps Script URL
     // To set up:
     // 1. Create a Google Sheet with a "Payments" tab

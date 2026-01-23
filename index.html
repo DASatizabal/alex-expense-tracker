@@ -58,8 +58,13 @@
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Version Tag -->
-    <span class="fixed top-4 right-4 z-50 text-xs text-slate-500" id="version-tag"></span>
+    <!-- Version Tag & Lock Button -->
+    <div class="fixed top-4 right-4 z-50 flex items-center gap-3">
+        <button class="p-2 hover:bg-white/10 rounded-lg transition-colors group" id="lock-btn" title="Lock App">
+            <i data-lucide="lock" class="w-4 h-4 text-slate-500 group-hover:text-violet-400"></i>
+        </button>
+        <span class="text-xs text-slate-500" id="version-tag"></span>
+    </div>
 
     <div class="container mx-auto max-w-4xl px-4 py-8">
         <!-- Header -->
@@ -198,12 +203,74 @@
                 <p class="text-slate-400">Loading...</p>
             </div>
         </div>
+
+        <!-- Password Modal -->
+        <div class="fixed inset-0 z-[150] hidden items-center justify-center p-4" id="password-modal">
+            <div class="absolute inset-0 bg-slate-950/95 backdrop-blur-md"></div>
+            <div class="relative w-full max-w-sm bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl animate-slide-up">
+                <div class="p-6 text-center border-b border-white/10">
+                    <div class="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-violet-600/20 to-cyan-600/20">
+                        <i data-lucide="shield-check" class="w-8 h-8 text-violet-400"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white" id="password-modal-title">Unlock App</h3>
+                    <p class="text-sm text-slate-400 mt-1" id="password-modal-subtitle">Enter your password to continue</p>
+                </div>
+                <form id="password-form" class="p-6 space-y-4">
+                    <div>
+                        <label for="password-input" class="block text-sm font-medium text-slate-400 mb-2">Password</label>
+                        <input type="password" id="password-input" required autocomplete="current-password"
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors"
+                            placeholder="Enter password">
+                    </div>
+                    <div id="confirm-password-group" class="hidden">
+                        <label for="confirm-password-input" class="block text-sm font-medium text-slate-400 mb-2">Confirm Password</label>
+                        <input type="password" id="confirm-password-input" autocomplete="new-password"
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors"
+                            placeholder="Confirm password">
+                    </div>
+                    <button type="submit" id="password-submit-btn"
+                        class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40">
+                        Unlock
+                    </button>
+                </form>
+                <div class="px-6 pb-6 text-center hidden" id="forgot-password-container">
+                    <button type="button" id="forgot-password-btn" class="text-sm text-slate-500 hover:text-red-400 transition-colors">
+                        Forgot password? Reset app data
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset Confirmation Modal -->
+        <div class="fixed inset-0 z-[160] hidden items-center justify-center p-4" id="reset-modal">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+            <div class="relative w-full max-w-sm bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-red-500/30 shadow-2xl animate-slide-up">
+                <div class="p-6 text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-red-500/20">
+                        <i data-lucide="alert-triangle" class="w-8 h-8 text-red-400"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-2">Reset App Data?</h3>
+                    <p class="text-sm text-slate-400 mb-6">This will delete all local payment data and password. Cloud data (Google Sheets) will remain safe.</p>
+                    <div class="flex gap-3">
+                        <button type="button" id="cancel-reset-btn"
+                            class="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors">
+                            Cancel
+                        </button>
+                        <button type="button" id="confirm-reset-btn"
+                            class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Toast Container -->
     <div class="fixed bottom-4 right-4 z-[200] flex flex-col gap-2" id="toast-container"></div>
 
     <script src="js/config.js"></script>
+    <script src="js/encryption.js"></script>
     <script src="js/sheets-api.js"></script>
     <script src="js/app.js"></script>
 </body>

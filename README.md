@@ -50,7 +50,8 @@ alex-expense-tracker/
 │   └── app.js              # Main application logic
 ├── README.md               # This file
 ├── SETUP.md                # Google Sheets setup guide
-└── RESUME.md               # Project summary for quick reference
+├── RESUME.md               # Project summary for quick reference
+└── TODO.md                 # Expansion roadmap and future plans
 ```
 
 ## Configuration
@@ -127,6 +128,17 @@ No API keys are exposed in the frontend. The Apps Script acts as a secure proxy.
 ## Browser Support
 
 Works in all modern browsers (Chrome, Firefox, Safari, Edge). Requires JavaScript enabled.
+
+## Roadmap
+
+See [TODO.md](TODO.md) for the full expansion roadmap, including:
+- Multi-tenant architecture plans
+- User template system (College Student, Young Professional, etc.)
+- Expanded expense types (weekly, quarterly, annual, variable)
+- n8n/webhook integration for notifications
+- Mobile app plans (PWA, Capacitor, React Native)
+- Analytics and smart predictions
+- Bank sync via Plaid
 
 ## License
 

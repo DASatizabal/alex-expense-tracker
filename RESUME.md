@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.3.6**
+**Current Version: 2.4.0**
 
 ## Quick Links
 
@@ -27,6 +27,8 @@ Data syncs to Google Sheets so it persists across devices.
 ## Current State (January 2026)
 
 ### Working Features
+- **Password protection** with AES-GCM encryption (Web Crypto API)
+- **Auto-lock** after 5 minutes of inactivity (manual lock button available)
 - Dark glassmorphism UI with Tailwind CSS and Lucide icons
 - Expense cards with status indicators (paid, due soon, overdue, pending)
 - Single payment modal with custom amounts and notes
@@ -52,12 +54,14 @@ alex-expense-tracker/
 ├── google-apps-script.js   # Backend (copy to Google Apps Script)
 ├── css/styles.css          # Styling
 ├── js/
-│   ├── config.js           # Settings + expense definitions
-│   ├── sheets-api.js       # API layer (cloud + localStorage)
-│   └── app.js              # UI logic
+│   ├── config.js           # Settings + expense definitions + encryption config
+│   ├── encryption.js       # Web Crypto API (AES-GCM, PBKDF2) for passwords
+│   ├── sheets-api.js       # API layer (cloud + localStorage + session cache)
+│   └── app.js              # UI logic + password protection flow
 ├── README.md               # Full documentation
 ├── SETUP.md                # Google Sheets setup guide
-└── RESUME.md               # This file
+├── RESUME.md               # This file
+└── TODO.md                 # Expansion roadmap
 ```
 
 ---
@@ -66,7 +70,13 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.3.6'
+APP_VERSION: '2.4.0'
+ENCRYPTION: {
+    ALGORITHM: 'AES-GCM',
+    KEY_LENGTH: 256,
+    PBKDF2_ITERATIONS: 100000,
+    AUTO_LOCK_MINUTES: 5
+}
 APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwQI_sZ76ZvFCXOdndlyhvI0U2UR3CXdJo_m_1NlCuDAUPS26sYyzzLOl7ZIyKCf_aa/exec'
 USE_LOCAL_STORAGE: false  // true = offline only, false = sync to Sheets
 ```
@@ -164,10 +174,17 @@ GitHub Pages auto-deploys within 1-2 minutes.
 
 ---
 
+## Roadmap
+
+See **TODO.md** for expansion plans including multi-user support, templates, mobile apps, and integrations.
+
+---
+
 ## Version History
 
 | Version | Changes |
 |---------|---------|
+| v2.4.0 | **Password protection**: AES-GCM encryption, PBKDF2 key derivation, 5-min auto-lock, manual lock button, forgot password reset |
 | v2.3.6 | Hide number spinners, auto-select amount fields on focus |
 | v2.3.5 | Editable amounts in bulk payment modal with smart defaults |
 | v2.3.4 | Allow bulk payments to past due expenses |
@@ -205,3 +222,4 @@ GitHub Pages auto-deploys within 1-2 minutes.
 5. Added savings goal paycheck breakdown
 6. Major UI modernization (v2.0.0) with Tailwind + glassmorphism
 7. Settled on dark-only theme after testing light/dark toggle
+8. Added password protection (v2.4.0) with Web Crypto API encryption

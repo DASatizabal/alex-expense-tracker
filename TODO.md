@@ -13,10 +13,10 @@ Transform this single-user expense tracker into a **multi-tenant personal financ
 
 | Feature | Implementation | Notes |
 |---------|---------------|-------|
-| **Simple PIN/Password** | localStorage encrypted with Web Crypto API | Quick win, no backend changes |
+| **Simple PIN/Password** | localStorage encrypted with Web Crypto API | ✅ **DONE v2.4.0** - AES-GCM + PBKDF2 |
 | **Google OAuth** | Firebase Auth or Supabase | Free tier handles thousands of users |
-| **Session timeout** | Auto-lock after X minutes of inactivity | Important for shared devices |
-| **Data encryption** | Encrypt localStorage payload | Protect sensitive financial data |
+| **Session timeout** | Auto-lock after X minutes of inactivity | ✅ **DONE v2.4.0** - 5 min auto-lock |
+| **Data encryption** | Encrypt localStorage payload | ✅ **DONE v2.4.0** - Full encryption |
 
 ### User Experience Quick Wins
 
@@ -572,7 +572,7 @@ Send: More urgent reminder + partner notification
 
 ```
 NOW (Week 1-2)
-├── [ ] PIN/password protection
+├── [x] PIN/password protection (v2.4.0)
 ├── [ ] PWA manifest (installable)
 ├── [ ] Dark/light theme toggle
 └── [ ] Basic export to CSV

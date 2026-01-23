@@ -89,3 +89,20 @@ input[type="number"] {
 .expense-card-pending {
     border-left-color: #8b5cf6 !important;
 }
+
+/* Password input styling */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+/* Lock button hover effect */
+#lock-btn:hover i {
+    animation: lock-shake 0.3s ease-in-out;
+}
+
+@keyframes lock-shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+}

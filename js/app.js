@@ -19,6 +19,28 @@ let bulkPaymentForm;
 let closeBulkModalBtn;
 let expenseCheckboxList;
 
+// Password Protection DOM Elements (initialized after DOM ready)
+let passwordModal;
+let passwordForm;
+let passwordInput;
+let confirmPasswordInput;
+let confirmPasswordGroup;
+let passwordModalTitle;
+let passwordModalSubtitle;
+let passwordSubmitBtn;
+let forgotPasswordContainer;
+let forgotPasswordBtn;
+let resetModal;
+let cancelResetBtn;
+let confirmResetBtn;
+let lockBtn;
+
+// Password Protection State
+let passwordMode = 'unlock'; // 'unlock' or 'setup'
+let wrongPasswordCount = 0;
+let lastActivityTime = Date.now();
+let inactivityCheckInterval = null;
+
 // Toast notification system
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
@@ -51,12 +73,269 @@ function initLucideIcons() {
     }
 }
 
+// ============ Password Protection Functions ============
+
+// Show password modal in unlock or setup mode
+function showPasswordModal(mode) {
+    passwordMode = mode;
+    wrongPasswordCount = 0;
+
+    // Reset form
+    passwordInput.value = '';
+    confirmPasswordInput.value = '';
+    forgotPasswordContainer.classList.add('hidden');
+
+    if (mode === 'setup') {
+        passwordModalTitle.textContent = 'Create Password';
+        passwordModalSubtitle.textContent = 'Set a password to protect your data';
+        passwordSubmitBtn.textContent = 'Create Password';
+        confirmPasswordGroup.classList.remove('hidden');
+        confirmPasswordInput.required = true;
+    } else {
+        passwordModalTitle.textContent = 'Unlock App';
+        passwordModalSubtitle.textContent = 'Enter your password to continue';
+        passwordSubmitBtn.textContent = 'Unlock';
+        confirmPasswordGroup.classList.add('hidden');
+        confirmPasswordInput.required = false;
+    }
+
+    passwordModal.classList.remove('hidden');
+    passwordModal.classList.add('flex');
+    initLucideIcons();
+
+    // Focus password input
+    setTimeout(() => passwordInput.focus(), 100);
+}
+
+// Hide password modal
+function hidePasswordModal() {
+    passwordModal.classList.add('hidden');
+    passwordModal.classList.remove('flex');
+}
+
+// Handle password form submission
+async function handlePasswordSubmit(e) {
+    e.preventDefault();
+
+    const password = passwordInput.value;
+
+    if (passwordMode === 'setup') {
+        await handleSetup(password);
+    } else {
+        await handleUnlock(password);
+    }
+}
+
+// Handle password setup (first time)
+async function handleSetup(password) {
+    const confirmPassword = confirmPasswordInput.value;
+
+    // Validate password
+    if (password.length < 4) {
+        showToast('Password must be at least 4 characters', 'error');
+        return;
+    }
+
+    if (password !== confirmPassword) {
+        showToast('Passwords do not match', 'error');
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        // Hash and store password
+        const { hash, salt } = await Encryption.hashPassword(password);
+        Encryption.storePasswordHash(hash, salt);
+
+        // Migrate existing unencrypted data
+        await Encryption.migrateToEncrypted(password);
+
+        // Get payments (either migrated or empty)
+        const encryptedData = Encryption.getEncryptedData();
+        let decryptedPayments = [];
+
+        if (encryptedData) {
+            decryptedPayments = await Encryption.decrypt(encryptedData, password);
+        }
+
+        // Set up session
+        SheetsAPI.setSession(decryptedPayments, password);
+
+        hidePasswordModal();
+        startInactivityTracking();
+        await init();
+
+        showToast('Password created successfully!', 'success');
+    } catch (error) {
+        console.error('Setup error:', error);
+        showToast('Failed to set up password', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Handle password unlock
+async function handleUnlock(password) {
+    showLoading(true);
+
+    try {
+        // Verify password
+        const credentials = Encryption.getStoredCredentials();
+        if (!credentials) {
+            showToast('No password found', 'error');
+            showLoading(false);
+            return;
+        }
+
+        const isValid = await Encryption.verifyPassword(password, credentials.hash, credentials.salt);
+
+        if (!isValid) {
+            wrongPasswordCount++;
+            showLoading(false);
+
+            // Show forgot password after 3 attempts
+            if (wrongPasswordCount >= 3) {
+                forgotPasswordContainer.classList.remove('hidden');
+            }
+
+            showToast('Incorrect password', 'error');
+            passwordInput.value = '';
+            passwordInput.focus();
+            return;
+        }
+
+        // Decrypt data
+        const encryptedData = Encryption.getEncryptedData();
+        let decryptedPayments = [];
+
+        if (encryptedData) {
+            decryptedPayments = await Encryption.decrypt(encryptedData, password);
+        }
+
+        // Set up session
+        SheetsAPI.setSession(decryptedPayments, password);
+
+        hidePasswordModal();
+        startInactivityTracking();
+        await init();
+
+        showToast('Welcome back!', 'success');
+    } catch (error) {
+        console.error('Unlock error:', error);
+        wrongPasswordCount++;
+
+        if (wrongPasswordCount >= 3) {
+            forgotPasswordContainer.classList.remove('hidden');
+        }
+
+        showToast('Incorrect password', 'error');
+        passwordInput.value = '';
+        passwordInput.focus();
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Lock the app
+function lockApp() {
+    // Clear session
+    SheetsAPI.clearSession();
+    payments = [];
+
+    // Stop inactivity tracking
+    stopInactivityTracking();
+
+    // Clear UI
+    expensesContainer.innerHTML = '';
+    paymentHistory.innerHTML = '';
+    monthlyTotalEl.textContent = '$0';
+    nextDueEl.textContent = '-';
+
+    // Show password modal
+    showPasswordModal('unlock');
+}
+
+// Reset app data (forgot password)
+function resetApp() {
+    Encryption.clearAllData();
+    SheetsAPI.clearSession();
+    payments = [];
+
+    hideResetModal();
+    hidePasswordModal();
+
+    // Show setup modal
+    showPasswordModal('setup');
+    showToast('Data cleared. Create a new password.', 'info');
+}
+
+// Show reset confirmation modal
+function showResetModal() {
+    resetModal.classList.remove('hidden');
+    resetModal.classList.add('flex');
+    initLucideIcons();
+}
+
+// Hide reset confirmation modal
+function hideResetModal() {
+    resetModal.classList.add('hidden');
+    resetModal.classList.remove('flex');
+}
+
+// ============ Inactivity Tracking ============
+
+// Update last activity time
+function updateActivity() {
+    lastActivityTime = Date.now();
+}
+
+// Start inactivity tracking
+function startInactivityTracking() {
+    // Track user interactions
+    document.addEventListener('click', updateActivity);
+    document.addEventListener('keypress', updateActivity);
+    document.addEventListener('scroll', updateActivity);
+    document.addEventListener('mousemove', updateActivity);
+    document.addEventListener('touchstart', updateActivity);
+
+    // Check for inactivity every 30 seconds
+    inactivityCheckInterval = setInterval(() => {
+        const idleMinutes = (Date.now() - lastActivityTime) / (1000 * 60);
+        if (idleMinutes >= CONFIG.ENCRYPTION.AUTO_LOCK_MINUTES) {
+            lockApp();
+        }
+    }, 30000);
+}
+
+// Stop inactivity tracking
+function stopInactivityTracking() {
+    document.removeEventListener('click', updateActivity);
+    document.removeEventListener('keypress', updateActivity);
+    document.removeEventListener('scroll', updateActivity);
+    document.removeEventListener('mousemove', updateActivity);
+    document.removeEventListener('touchstart', updateActivity);
+
+    if (inactivityCheckInterval) {
+        clearInterval(inactivityCheckInterval);
+        inactivityCheckInterval = null;
+    }
+}
+
+// Check if app should start locked
+function checkInitialLockState() {
+    if (Encryption.isPasswordSet()) {
+        // Password exists, show unlock modal
+        showPasswordModal('unlock');
+    } else {
+        // No password, show setup modal
+        showPasswordModal('setup');
+    }
+}
+
 // Initialize the app
 async function init() {
     showLoading(true);
-
-    // Display version
-    document.getElementById('version-tag').textContent = 'v' + APP_VERSION;
 
     try {
         // Load payments from storage
@@ -899,6 +1178,22 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBulkModalBtn = document.getElementById('close-bulk-modal');
     expenseCheckboxList = document.getElementById('expense-checkbox-list');
 
+    // Initialize password protection DOM elements
+    passwordModal = document.getElementById('password-modal');
+    passwordForm = document.getElementById('password-form');
+    passwordInput = document.getElementById('password-input');
+    confirmPasswordInput = document.getElementById('confirm-password-input');
+    confirmPasswordGroup = document.getElementById('confirm-password-group');
+    passwordModalTitle = document.getElementById('password-modal-title');
+    passwordModalSubtitle = document.getElementById('password-modal-subtitle');
+    passwordSubmitBtn = document.getElementById('password-submit-btn');
+    forgotPasswordContainer = document.getElementById('forgot-password-container');
+    forgotPasswordBtn = document.getElementById('forgot-password-btn');
+    resetModal = document.getElementById('reset-modal');
+    cancelResetBtn = document.getElementById('cancel-reset-btn');
+    confirmResetBtn = document.getElementById('confirm-reset-btn');
+    lockBtn = document.getElementById('lock-btn');
+
     // Set up bulk payment event listeners
     if (bulkPaymentBtn) {
         bulkPaymentBtn.addEventListener('click', openBulkPaymentModal);
@@ -917,6 +1212,23 @@ document.addEventListener('DOMContentLoaded', () => {
         bulkPaymentForm.addEventListener('submit', handleBulkPaymentSubmit);
     }
 
+    // Set up password protection event listeners
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', handlePasswordSubmit);
+    }
+    if (forgotPasswordBtn) {
+        forgotPasswordBtn.addEventListener('click', showResetModal);
+    }
+    if (cancelResetBtn) {
+        cancelResetBtn.addEventListener('click', hideResetModal);
+    }
+    if (confirmResetBtn) {
+        confirmResetBtn.addEventListener('click', resetApp);
+    }
+    if (lockBtn) {
+        lockBtn.addEventListener('click', lockApp);
+    }
+
     // Auto-select amount fields on focus (event delegation for dynamic inputs)
     document.addEventListener('focus', (e) => {
         if (e.target.type === 'number') {
@@ -927,6 +1239,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Lucide icons
     initLucideIcons();
 
-    // Initialize the app
-    init();
+    // Display version (do this before password check)
+    document.getElementById('version-tag').textContent = 'v' + APP_VERSION;
+
+    // Check password state and show appropriate modal
+    checkInitialLockState();
 });

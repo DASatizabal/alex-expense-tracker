@@ -1,6 +1,9 @@
 // Google Apps Script API integration with localStorage fallback
 
 const SheetsAPI = {
+    // Session cache for decrypted data (only in memory, never in localStorage)
+    _sessionCache: null,
+    _sessionPassword: null,
     // Check if Apps Script is configured
     isConfigured() {
         return CONFIG.APPS_SCRIPT_URL &&
@@ -108,21 +111,54 @@ const SheetsAPI = {
         }
     },
 
+    // ============ Session Management ============
+
+    // Set session with decrypted data and password
+    setSession(payments, password) {
+        this._sessionCache = payments;
+        this._sessionPassword = password;
+    },
+
+    // Clear session (for locking)
+    clearSession() {
+        this._sessionCache = null;
+        this._sessionPassword = null;
+    },
+
+    // Check if session is active
+    hasSession() {
+        return this._sessionCache !== null && this._sessionPassword !== null;
+    },
+
+    // Get session password (for re-encryption)
+    getSessionPassword() {
+        return this._sessionPassword;
+    },
+
     // ============ LocalStorage Methods ============
 
     getPaymentsFromLocalStorage() {
-        const stored = localStorage.getItem('alex_expense_payments');
-        if (!stored) return [];
-
-        try {
-            return JSON.parse(stored);
-        } catch (e) {
-            console.error('Error parsing localStorage:', e);
-            return [];
+        // If session is active, return cached data
+        if (this._sessionCache !== null) {
+            return this._sessionCache;
         }
+
+        // Check for unencrypted data (backwards compatibility)
+        const unencrypted = localStorage.getItem('alex_expense_payments');
+        if (unencrypted) {
+            try {
+                return JSON.parse(unencrypted);
+            } catch (e) {
+                console.error('Error parsing localStorage:', e);
+                return [];
+            }
+        }
+
+        // No session and no unencrypted data
+        return [];
     },
 
-    savePaymentToLocalStorage(payment) {
+    async savePaymentToLocalStorage(payment) {
         const payments = this.getPaymentsFromLocalStorage();
 
         // Add unique ID and timestamp
@@ -134,16 +170,26 @@ const SheetsAPI = {
         // Sort by date, newest first
         payments.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        localStorage.setItem('alex_expense_payments', JSON.stringify(payments));
+        // Update session cache
+        this._sessionCache = payments;
+
+        // Encrypt and save to localStorage
+        await this._saveEncryptedPayments(payments);
+
         return payment;
     },
 
     // Add payment to localStorage without generating new ID (for syncing from cloud)
-    addToLocalStorage(payment) {
+    async addToLocalStorage(payment) {
         const payments = this.getPaymentsFromLocalStorage();
         payments.push(payment);
         payments.sort((a, b) => new Date(b.date) - new Date(a.date));
-        localStorage.setItem('alex_expense_payments', JSON.stringify(payments));
+
+        // Update session cache
+        this._sessionCache = payments;
+
+        // Encrypt and save to localStorage
+        await this._saveEncryptedPayments(payments);
     },
 
     // Delete a payment
@@ -154,12 +200,27 @@ const SheetsAPI = {
         // Always update localStorage too (for offline fallback)
         const payments = this.getPaymentsFromLocalStorage();
         const filtered = payments.filter(p => p.id !== paymentId);
-        localStorage.setItem('alex_expense_payments', JSON.stringify(filtered));
+
+        // Update session cache
+        this._sessionCache = filtered;
+
+        // Encrypt and save to localStorage
+        await this._saveEncryptedPayments(filtered);
+    },
+
+    // Internal: Save encrypted payments to localStorage
+    async _saveEncryptedPayments(payments) {
+        if (this._sessionPassword) {
+            const encrypted = await Encryption.encrypt(payments, this._sessionPassword);
+            Encryption.storeEncryptedData(encrypted);
+        }
     },
 
     // Clear all payments (use with caution)
     clearAllPayments() {
         localStorage.removeItem('alex_expense_payments');
+        Encryption.clearAllData();
+        this.clearSession();
     },
 
     // ============ Utility Methods ============
