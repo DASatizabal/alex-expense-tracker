@@ -4,95 +4,208 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alex's Expense Tracker</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'fade-in': 'fadeIn 0.2s ease-out',
+                        'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: '0.5' },
+                            '50%': { opacity: '0.8' },
+                        },
+                    },
+                },
+            },
+        }
+    </script>
+
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="dark-mode">
-    <button class="theme-toggle" id="theme-toggle" title="Toggle theme">🌙</button>
-    <span class="version-tag" id="version-tag"></span>
-    <div class="container">
-        <header>
-            <h1>Alex's Expense Tracker</h1>
+<body class="dark font-sans min-h-screen bg-slate-950 text-slate-100 antialiased">
+    <!-- Background gradient -->
+    <div class="fixed inset-0 -z-10 overflow-hidden">
+        <div class="absolute top-1/4 -left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl animate-pulse-glow"></div>
+        <div class="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 1s;"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Theme Toggle & Version -->
+    <button class="fixed top-4 right-16 z-50 p-2 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-200" id="theme-toggle" title="Toggle theme">
+        <i data-lucide="moon" class="w-5 h-5"></i>
+    </button>
+    <span class="fixed top-5 right-4 z-50 text-xs text-slate-500" id="version-tag"></span>
+
+    <div class="container mx-auto max-w-4xl px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-violet-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent mb-2">
+                Alex's Expense Tracker
+            </h1>
+            <p class="text-slate-400 text-sm">Track expenses, manage payments, reach your goals</p>
         </header>
 
-        <section class="summary-card">
-            <div class="summary-item">
-                <span class="label">Remaining:</span>
-                <span class="value" id="monthly-total">$0</span>
+        <!-- Summary Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <!-- Remaining Card -->
+            <div class="group relative bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-violet-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/10">
+                <div class="absolute inset-0 bg-gradient-to-br from-violet-600/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-2 text-slate-400 text-sm mb-2">
+                        <i data-lucide="wallet" class="w-4 h-4"></i>
+                        <span>Remaining This Month</span>
+                    </div>
+                    <div class="text-3xl font-bold text-white" id="monthly-total">$0</div>
+                </div>
             </div>
-            <div class="summary-item">
-                <span class="label">Next Due:</span>
-                <span class="value" id="next-due">-</span>
+
+            <!-- Next Due Card -->
+            <div class="group relative bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10">
+                <div class="absolute inset-0 bg-gradient-to-br from-cyan-600/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative">
+                    <div class="flex items-center gap-2 text-slate-400 text-sm mb-2">
+                        <i data-lucide="calendar-clock" class="w-4 h-4"></i>
+                        <span>Next Due</span>
+                    </div>
+                    <div class="text-xl font-semibold text-white truncate" id="next-due">-</div>
+                </div>
             </div>
-            <div class="summary-item">
-                <button class="btn btn-primary" id="bulk-payment-btn">+ Bulk Payment</button>
+
+            <!-- Bulk Payment Button Card -->
+            <div class="relative bg-gradient-to-br from-violet-600/20 to-cyan-600/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10 flex items-center justify-center">
+                <button class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40 hover:scale-105" id="bulk-payment-btn">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                    Bulk Payment
+                </button>
             </div>
         </section>
 
-        <section class="expenses-grid" id="expenses-container">
+        <!-- Expense Cards Grid -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" id="expenses-container">
             <!-- Expense cards will be rendered here by JavaScript -->
         </section>
 
-        <section class="history-section">
-            <h2>Recent Payments</h2>
-            <ul class="payment-list" id="payment-history">
+        <!-- Recent Payments Section -->
+        <section class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center gap-2">
+                <i data-lucide="history" class="w-5 h-5 text-slate-400"></i>
+                <h2 class="text-lg font-semibold text-white">Recent Payments</h2>
+            </div>
+            <ul class="divide-y divide-white/5" id="payment-history">
                 <!-- Payment history will be rendered here by JavaScript -->
             </ul>
         </section>
 
-        <!-- Modal for adding payments/savings -->
-        <div class="modal" id="payment-modal">
-            <div class="modal-content">
-                <span class="close-btn" id="close-modal">&times;</span>
-                <h3 id="modal-title">Record Payment</h3>
-                <form id="payment-form">
+        <!-- Payment Modal -->
+        <div class="fixed inset-0 z-50 hidden items-center justify-center p-4" id="payment-modal">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="payment-modal-backdrop"></div>
+            <div class="relative w-full max-w-md bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl animate-slide-up">
+                <div class="flex items-center justify-between p-6 border-b border-white/10">
+                    <h3 class="text-xl font-semibold text-white" id="modal-title">Record Payment</h3>
+                    <button class="p-2 hover:bg-white/10 rounded-lg transition-colors" id="close-modal">
+                        <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
+                    </button>
+                </div>
+                <form id="payment-form" class="p-6 space-y-4">
                     <input type="hidden" id="payment-category">
-                    <div class="form-group">
-                        <label for="payment-amount">Amount ($)</label>
-                        <input type="number" id="payment-amount" step="0.01" required>
+                    <div>
+                        <label for="payment-amount" class="block text-sm font-medium text-slate-400 mb-2">Amount ($)</label>
+                        <input type="number" id="payment-amount" step="0.01" required
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
-                    <div class="form-group">
-                        <label for="payment-date">Date</label>
-                        <input type="date" id="payment-date" required>
+                    <div>
+                        <label for="payment-date" class="block text-sm font-medium text-slate-400 mb-2">Date</label>
+                        <input type="date" id="payment-date" required
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
-                    <div class="form-group">
-                        <label for="payment-notes">Notes (optional)</label>
-                        <input type="text" id="payment-notes" placeholder="e.g., Paid to Mom, Paid to David, etc.">
+                    <div>
+                        <label for="payment-notes" class="block text-sm font-medium text-slate-400 mb-2">Notes (optional)</label>
+                        <input type="text" id="payment-notes" placeholder="e.g., Paid to Mom, Paid to David, etc."
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
-                    <button type="submit" class="btn btn-primary">Save Payment</button>
+                    <button type="submit"
+                        class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40">
+                        Save Payment
+                    </button>
                 </form>
             </div>
         </div>
 
-        <!-- Modal for bulk payments -->
-        <div class="modal" id="bulk-payment-modal">
-            <div class="modal-content">
-                <span class="close-btn" id="close-bulk-modal">&times;</span>
-                <h3>Bulk Payment</h3>
-                <form id="bulk-payment-form">
-                    <div class="form-group">
-                        <label for="bulk-payment-date">Payment Date</label>
-                        <input type="date" id="bulk-payment-date" required>
+        <!-- Bulk Payment Modal -->
+        <div class="fixed inset-0 z-50 hidden items-center justify-center p-4" id="bulk-payment-modal">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="bulk-modal-backdrop"></div>
+            <div class="relative w-full max-w-md bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl animate-slide-up">
+                <div class="flex items-center justify-between p-6 border-b border-white/10">
+                    <h3 class="text-xl font-semibold text-white">Bulk Payment</h3>
+                    <button class="p-2 hover:bg-white/10 rounded-lg transition-colors" id="close-bulk-modal">
+                        <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
+                    </button>
+                </div>
+                <form id="bulk-payment-form" class="p-6 space-y-4">
+                    <div>
+                        <label for="bulk-payment-date" class="block text-sm font-medium text-slate-400 mb-2">Payment Date</label>
+                        <input type="date" id="bulk-payment-date" required
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
-                    <div class="form-group">
-                        <label>Select Expenses to Pay</label>
-                        <div class="expense-checkbox-list" id="expense-checkbox-list">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">Select Expenses to Pay</label>
+                        <div class="max-h-60 overflow-y-auto bg-white/5 border border-white/10 rounded-xl p-2 space-y-1" id="expense-checkbox-list">
                             <!-- Checkboxes will be rendered by JavaScript -->
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="bulk-payment-notes">Notes (optional)</label>
-                        <input type="text" id="bulk-payment-notes" placeholder="Paid to Mom, Paid to David, etc.">
+                    <div>
+                        <label for="bulk-payment-notes" class="block text-sm font-medium text-slate-400 mb-2">Notes (optional)</label>
+                        <input type="text" id="bulk-payment-notes" placeholder="Paid to Mom, Paid to David, etc."
+                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
-                    <button type="submit" class="btn btn-primary">Pay Selected</button>
+                    <button type="submit"
+                        class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40">
+                        Pay Selected
+                    </button>
                 </form>
             </div>
         </div>
 
-        <div class="loading-overlay" id="loading">
-            <div class="spinner"></div>
-            <p>Loading...</p>
+        <!-- Loading Overlay -->
+        <div class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm" id="loading">
+            <div class="flex flex-col items-center gap-4">
+                <div class="w-12 h-12 border-4 border-violet-600/30 border-t-violet-600 rounded-full animate-spin"></div>
+                <p class="text-slate-400">Loading...</p>
+            </div>
         </div>
     </div>
+
+    <!-- Toast Container -->
+    <div class="fixed bottom-4 right-4 z-[200] flex flex-col gap-2" id="toast-container"></div>
 
     <script src="js/config.js"></script>
     <script src="js/sheets-api.js"></script>

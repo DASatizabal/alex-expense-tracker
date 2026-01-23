@@ -19,6 +19,38 @@ let bulkPaymentForm;
 let closeBulkModalBtn;
 let expenseCheckboxList;
 
+// Toast notification system
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+
+    const bgColor = type === 'success' ? 'bg-emerald-600' : type === 'error' ? 'bg-red-600' : 'bg-violet-600';
+    const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info';
+
+    toast.className = `flex items-center gap-3 px-4 py-3 ${bgColor} text-white rounded-xl shadow-lg backdrop-blur-sm toast-enter`;
+    toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-5 h-5"></i>
+        <span class="font-medium">${message}</span>
+    `;
+
+    container.appendChild(toast);
+    lucide.createIcons({ nodes: [toast] });
+
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Initialize Lucide icons
+function initLucideIcons() {
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
+
 // Initialize theme from localStorage or default to dark
 function initTheme() {
     const savedTheme = localStorage.getItem('alex_expense_theme');
@@ -27,12 +59,13 @@ function initTheme() {
 
     // Default to dark mode if no preference saved
     if (savedTheme === 'light') {
-        body.classList.remove('dark-mode');
-        themeToggle.textContent = '☀️';
+        body.classList.remove('dark');
+        themeToggle.innerHTML = '<i data-lucide="sun" class="w-5 h-5"></i>';
     } else {
-        body.classList.add('dark-mode');
-        themeToggle.textContent = '🌙';
+        body.classList.add('dark');
+        themeToggle.innerHTML = '<i data-lucide="moon" class="w-5 h-5"></i>';
     }
+    initLucideIcons();
 }
 
 // Toggle theme between light and dark
@@ -40,15 +73,16 @@ function toggleTheme() {
     const body = document.body;
     const themeToggle = document.getElementById('theme-toggle');
 
-    if (body.classList.contains('dark-mode')) {
-        body.classList.remove('dark-mode');
-        themeToggle.textContent = '☀️';
+    if (body.classList.contains('dark')) {
+        body.classList.remove('dark');
+        themeToggle.innerHTML = '<i data-lucide="sun" class="w-5 h-5"></i>';
         localStorage.setItem('alex_expense_theme', 'light');
     } else {
-        body.classList.add('dark-mode');
-        themeToggle.textContent = '🌙';
+        body.classList.add('dark');
+        themeToggle.innerHTML = '<i data-lucide="moon" class="w-5 h-5"></i>';
         localStorage.setItem('alex_expense_theme', 'dark');
     }
+    initLucideIcons();
 }
 
 // Initialize the app
@@ -69,8 +103,12 @@ async function init() {
         renderExpenseCards();
         renderPaymentHistory();
         updateSummary();
+
+        // Initialize Lucide icons for dynamically rendered content
+        initLucideIcons();
     } catch (error) {
         console.error('Error initializing app:', error);
+        showToast('Failed to load data', 'error');
     } finally {
         showLoading(false);
     }
@@ -78,7 +116,13 @@ async function init() {
 
 // Show/hide loading overlay
 function showLoading(show) {
-    loadingOverlay.classList.toggle('active', show);
+    if (show) {
+        loadingOverlay.classList.remove('hidden');
+        loadingOverlay.classList.add('flex');
+    } else {
+        loadingOverlay.classList.add('hidden');
+        loadingOverlay.classList.remove('flex');
+    }
 }
 
 // Get the current month and year
@@ -229,33 +273,49 @@ function renderExpenseCards() {
         const card = createExpenseCard(expense);
         expensesContainer.appendChild(card);
     });
+
+    initLucideIcons();
 }
 
 // Create an expense card element
 function createExpenseCard(expense) {
     const { status, label } = getExpenseStatus(expense);
     const card = document.createElement('div');
-    card.className = `expense-card status-${status}`;
+
+    // Status-based border color class
+    const borderColorClass = status === 'paid' ? 'expense-card-paid' :
+                             status === 'due-soon' ? 'expense-card-due-soon' :
+                             status === 'overdue' ? 'expense-card-overdue' : 'expense-card-pending';
+
+    card.className = `group relative bg-white/5 backdrop-blur-xl rounded-2xl p-5 border-l-4 border border-white/10 hover:bg-white/10 transition-all duration-300 ${borderColorClass}`;
 
     let progressHTML = '';
     let actionButton = '';
+
+    // Status badge colors
+    const statusColors = {
+        'paid': 'bg-emerald-500/20 text-emerald-400',
+        'due-soon': 'bg-yellow-500/20 text-yellow-400',
+        'overdue': 'bg-red-500/20 text-red-400',
+        'pending': 'bg-violet-500/20 text-violet-400'
+    };
 
     if (expense.type === 'loan') {
         const paymentCount = getPaymentCountForCategory(expense.id);
         const percentage = Math.round((paymentCount / expense.totalPayments) * 100);
         progressHTML = `
-            <div class="progress-section">
-                <div class="progress-label">
+            <div class="mt-4">
+                <div class="flex justify-between text-sm text-slate-400 mb-2">
                     <span>${paymentCount} of ${expense.totalPayments} payments</span>
                     <span>${percentage}%</span>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${percentage}%"></div>
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div class="h-full progress-gradient rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
                 </div>
             </div>
         `;
         if (paymentCount < expense.totalPayments) {
-            actionButton = `<button class="btn btn-primary" onclick="openPaymentModal('${expense.id}', ${expense.amount})">Mark as Paid</button>`;
+            actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', ${expense.amount})">Mark as Paid</button>`;
         }
     } else if (expense.type === 'goal') {
         const totalSaved = getTotalPaymentsForCategory(expense.id);
@@ -287,28 +347,28 @@ function createExpenseCard(expense) {
 
         let paycheckBreakdown = '';
         if (remainingBalance > 0 && paychecksRemaining > 0) {
-            paycheckBreakdown = `<div class="paycheck-breakdown">${paychecksRemaining} paychecks left · $${formatCurrency(perPaycheck)}/paycheck</div>`;
+            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${paychecksRemaining} paychecks left · $${formatCurrency(perPaycheck)}/paycheck</div>`;
         }
 
         progressHTML = `
-            <div class="progress-section">
-                <div class="progress-label">
+            <div class="mt-4">
+                <div class="flex justify-between text-sm text-slate-400 mb-2">
                     <span>$${formatCurrency(totalSaved, 0)} of $${formatCurrency(expense.amount)}</span>
                     <span>${percentage}%</span>
                 </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${percentage}%"></div>
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div class="h-full progress-gradient rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
                 </div>
                 ${paycheckBreakdown}
             </div>
         `;
         if (totalSaved < expense.amount) {
-            actionButton = `<button class="btn btn-success" onclick="openPaymentModal('${expense.id}', null, true)">Add to Savings</button>`;
+            actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', null, true)">Add to Savings</button>`;
         }
     } else {
         // Recurring expense
         if (status !== 'paid') {
-            actionButton = `<button class="btn btn-primary" onclick="openPaymentModal('${expense.id}', ${expense.amount})">Mark as Paid</button>`;
+            actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', ${expense.amount})">Mark as Paid</button>`;
         }
     }
 
@@ -321,21 +381,19 @@ function createExpenseCard(expense) {
         : `$${formatCurrency(expense.amount)}/month`;
 
     card.innerHTML = `
-        <div class="expense-header">
-            <div class="expense-title">
-                <span class="expense-icon">${expense.icon}</span>
-                <span class="expense-name">${expense.name}</span>
+        <div class="flex justify-between items-start mb-3">
+            <div class="flex items-center gap-3">
+                <span class="text-2xl">${expense.icon}</span>
+                <span class="font-semibold text-white">${expense.name}</span>
             </div>
-            <span class="expense-amount">${amountText}</span>
+            <span class="text-lg font-bold text-violet-400">${amountText}</span>
         </div>
-        <div class="expense-details">
-            <div class="expense-due">${dueText}</div>
-            <span class="expense-status">${label}</span>
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-slate-400">${dueText}</span>
+            <span class="px-2.5 py-1 text-xs font-medium rounded-full ${statusColors[status]}">${label}</span>
         </div>
         ${progressHTML}
-        <div class="expense-actions">
-            ${actionButton}
-        </div>
+        ${actionButton}
     `;
 
     return card;
@@ -346,7 +404,7 @@ function renderPaymentHistory() {
     paymentHistory.innerHTML = '';
 
     if (payments.length === 0) {
-        paymentHistory.innerHTML = '<li class="no-payments">No payments recorded yet</li>';
+        paymentHistory.innerHTML = '<li class="px-6 py-8 text-center text-slate-500">No payments recorded yet</li>';
         return;
     }
 
@@ -356,7 +414,7 @@ function renderPaymentHistory() {
     recentPayments.forEach(payment => {
         const expense = EXPENSES.find(e => e.id === payment.category);
         const li = document.createElement('li');
-        li.className = 'payment-item';
+        li.className = 'flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors';
 
         const date = parseLocalDate(payment.date);
         const formattedDate = date.toLocaleDateString('en-US', {
@@ -366,18 +424,25 @@ function renderPaymentHistory() {
         });
 
         li.innerHTML = `
-            <div class="payment-info">
-                <span class="payment-category">${expense ? expense.icon : ''} ${expense ? expense.name : payment.category}</span>
-                <span class="payment-date">${formattedDate}${payment.notes ? ' - ' + payment.notes : ''}</span>
+            <div class="flex items-center gap-3">
+                <span class="text-xl">${expense ? expense.icon : ''}</span>
+                <div>
+                    <div class="font-medium text-white">${expense ? expense.name : payment.category}</div>
+                    <div class="text-sm text-slate-500">${formattedDate}${payment.notes ? ' · ' + payment.notes : ''}</div>
+                </div>
             </div>
-            <div class="payment-actions">
-                <span class="payment-amount">$${formatCurrency(payment.amount)}</span>
-                <button class="btn-delete" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">&times;</button>
+            <div class="flex items-center gap-4">
+                <span class="font-semibold text-emerald-400">$${formatCurrency(payment.amount)}</span>
+                <button class="p-2 hover:bg-red-500/20 rounded-lg transition-colors group" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">
+                    <i data-lucide="trash-2" class="w-4 h-4 text-slate-500 group-hover:text-red-400"></i>
+                </button>
             </div>
         `;
 
         paymentHistory.appendChild(li);
     });
+
+    initLucideIcons();
 }
 
 // Update summary section
@@ -438,17 +503,17 @@ function updateSummary() {
     if (nextDue) {
         if (minDaysUntil < 0) {
             nextDueEl.textContent = `${nextDue.name} (Overdue!)`;
-            nextDueEl.style.color = '#e74c3c';
+            nextDueEl.className = 'text-xl font-semibold text-red-400 truncate';
         } else if (minDaysUntil === 0) {
             nextDueEl.textContent = `${nextDue.name} (Today!)`;
-            nextDueEl.style.color = '#f39c12';
+            nextDueEl.className = 'text-xl font-semibold text-yellow-400 truncate';
         } else {
             nextDueEl.textContent = `${nextDue.name} (in ${minDaysUntil} day${minDaysUntil !== 1 ? 's' : ''})`;
-            nextDueEl.style.color = '';
+            nextDueEl.className = 'text-xl font-semibold text-white truncate';
         }
     } else {
         nextDueEl.textContent = 'All paid!';
-        nextDueEl.style.color = '#27ae60';
+        nextDueEl.className = 'text-xl font-semibold text-emerald-400 truncate';
     }
 }
 
@@ -495,12 +560,14 @@ function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
     document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('payment-notes').value = '';
 
-    paymentModal.classList.add('active');
+    paymentModal.classList.remove('hidden');
+    paymentModal.classList.add('flex');
 }
 
 // Close payment modal
 function closePaymentModal() {
-    paymentModal.classList.remove('active');
+    paymentModal.classList.add('hidden');
+    paymentModal.classList.remove('flex');
 }
 
 // Handle payment form submission
@@ -515,7 +582,7 @@ async function handlePaymentSubmit(e) {
     };
 
     if (!payment.amount || payment.amount <= 0) {
-        alert('Please enter a valid amount');
+        showToast('Please enter a valid amount', 'error');
         return;
     }
 
@@ -530,9 +597,10 @@ async function handlePaymentSubmit(e) {
         updateSummary();
 
         closePaymentModal();
+        showToast('Payment saved successfully!', 'success');
     } catch (error) {
         console.error('Error saving payment:', error);
-        alert('Failed to save payment. Please try again.');
+        showToast('Failed to save payment', 'error');
     } finally {
         showLoading(false);
     }
@@ -553,9 +621,10 @@ async function handleDeletePayment(paymentId) {
         renderExpenseCards();
         renderPaymentHistory();
         updateSummary();
+        showToast('Payment deleted', 'success');
     } catch (error) {
         console.error('Error deleting payment:', error);
-        alert('Failed to delete payment. Please try again.');
+        showToast('Failed to delete payment', 'error');
     } finally {
         showLoading(false);
     }
@@ -586,22 +655,29 @@ function openBulkPaymentModal() {
         }
 
         const checkItem = document.createElement('label');
-        checkItem.className = 'expense-check-item';
-        checkItem.innerHTML = `<input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}"><span class="expense-check-icon">${expense.icon}</span><span class="expense-check-name">${expense.name}</span><span class="expense-check-amount">$${formatCurrency(expense.amount)}</span>`;
+        checkItem.className = 'flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors';
+        checkItem.innerHTML = `
+            <input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}" class="w-5 h-5 rounded border-white/20 bg-white/5 text-violet-600 focus:ring-violet-500 focus:ring-offset-0">
+            <span class="text-lg">${expense.icon}</span>
+            <span class="flex-1 text-white">${expense.name}</span>
+            <span class="font-semibold text-violet-400">$${formatCurrency(expense.amount)}</span>
+        `;
         expenseCheckboxList.appendChild(checkItem);
     });
 
     // Show message if no unpaid expenses
     if (expenseCheckboxList.children.length === 0) {
-        expenseCheckboxList.innerHTML = '<p class="no-expenses">All expenses are paid for this month!</p>';
+        expenseCheckboxList.innerHTML = '<p class="text-center text-slate-500 py-4">All expenses are paid for this month!</p>';
     }
 
-    bulkPaymentModal.classList.add('active');
+    bulkPaymentModal.classList.remove('hidden');
+    bulkPaymentModal.classList.add('flex');
 }
 
 // Close bulk payment modal
 function closeBulkPaymentModal() {
-    bulkPaymentModal.classList.remove('active');
+    bulkPaymentModal.classList.add('hidden');
+    bulkPaymentModal.classList.remove('flex');
 }
 
 // Handle bulk payment form submission
@@ -613,7 +689,7 @@ async function handleBulkPaymentSubmit(e) {
     const checkboxes = expenseCheckboxList.querySelectorAll('input[type="checkbox"]:checked');
 
     if (checkboxes.length === 0) {
-        alert('Please select at least one expense to pay');
+        showToast('Please select at least one expense', 'error');
         return;
     }
 
@@ -639,9 +715,10 @@ async function handleBulkPaymentSubmit(e) {
         updateSummary();
 
         closeBulkPaymentModal();
+        showToast(`${checkboxes.length} payment${checkboxes.length > 1 ? 's' : ''} saved!`, 'success');
     } catch (error) {
         console.error('Error saving bulk payments:', error);
-        alert('Failed to save payments. Please try again.');
+        showToast('Failed to save payments', 'error');
     } finally {
         showLoading(false);
     }
@@ -650,7 +727,7 @@ async function handleBulkPaymentSubmit(e) {
 // Event Listeners
 closeModalBtn.addEventListener('click', closePaymentModal);
 paymentModal.addEventListener('click', (e) => {
-    if (e.target === paymentModal) {
+    if (e.target === paymentModal || e.target.id === 'payment-modal-backdrop') {
         closePaymentModal();
     }
 });
@@ -685,7 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (bulkPaymentModal) {
         bulkPaymentModal.addEventListener('click', (e) => {
-            if (e.target === bulkPaymentModal) {
+            if (e.target === bulkPaymentModal || e.target.id === 'bulk-modal-backdrop') {
                 closeBulkPaymentModal();
             }
         });
@@ -693,6 +770,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (bulkPaymentForm) {
         bulkPaymentForm.addEventListener('submit', handleBulkPaymentSubmit);
     }
+
+    // Initialize Lucide icons
+    initLucideIcons();
 
     // Initialize the app
     init();
