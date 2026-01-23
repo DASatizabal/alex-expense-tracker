@@ -240,7 +240,12 @@ function getExpenseStatus(expense) {
             return { status: 'paid', label: 'Paid this month' };
         }
     } else {
-        // For recurring expenses
+        // For recurring expenses - check if still past due before marking as paid
+        const { pastDue } = getCreditOrPastDue(expense);
+        if (pastDue > 0) {
+            // Still past due, don't mark as paid even if payment made this month
+            return { status: 'overdue', label: 'Past Due!' };
+        }
         if (hasPaymentForMonth(expense.id, month, year)) {
             return { status: 'paid', label: 'Paid this month' };
         }
