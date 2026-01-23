@@ -308,13 +308,31 @@ function renderPaymentHistory() {
 
 // Update summary section
 function updateSummary() {
-    // Monthly total
-    monthlyTotalEl.textContent = `$${MONTHLY_TOTAL}/month`;
-
-    // Find next due expense
     const today = new Date();
     const currentDay = today.getDate();
     const { month, year } = getCurrentMonthYear();
+
+    // Calculate remaining amount to pay this month
+    let remainingAmount = 0;
+    EXPENSES.forEach(expense => {
+        // Skip goals
+        if (expense.type === 'goal') return;
+
+        // Skip if already paid this month
+        if (hasPaymentForMonth(expense.id, month, year)) return;
+
+        // For loans, skip if fully paid
+        if (expense.type === 'loan') {
+            const paymentCount = getPaymentCountForCategory(expense.id);
+            if (paymentCount >= expense.totalPayments) return;
+        }
+
+        remainingAmount += expense.amount;
+    });
+
+    monthlyTotalEl.textContent = `$${remainingAmount}`;
+
+    // Find next due expense
 
     let nextDue = null;
     let minDaysUntil = Infinity;
