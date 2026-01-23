@@ -332,7 +332,7 @@ function createExpenseCard(expense) {
         const dueDate = new Date(expense.dueDate);
         dueDate.setHours(23, 59, 59, 999); // Include the due date fully
 
-        let paychecksRemaining = 0;
+        let paychecksRemaining = 1;
         let currentPaycheck = new Date(paycheckStart);
 
         // Find the next paycheck on or after today
