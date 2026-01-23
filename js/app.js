@@ -12,12 +12,12 @@ const paymentForm = document.getElementById('payment-form');
 const closeModalBtn = document.getElementById('close-modal');
 const loadingOverlay = document.getElementById('loading');
 
-// Bulk Payment DOM Elements
-const bulkPaymentBtn = document.getElementById('bulk-payment-btn');
-const bulkPaymentModal = document.getElementById('bulk-payment-modal');
-const bulkPaymentForm = document.getElementById('bulk-payment-form');
-const closeBulkModalBtn = document.getElementById('close-bulk-modal');
-const expenseCheckboxList = document.getElementById('expense-checkbox-list');
+// Bulk Payment DOM Elements (initialized after DOM ready)
+let bulkPaymentBtn;
+let bulkPaymentModal;
+let bulkPaymentForm;
+let closeBulkModalBtn;
+let expenseCheckboxList;
 
 // Initialize the app
 async function init() {
@@ -466,23 +466,41 @@ paymentModal.addEventListener('click', (e) => {
 });
 paymentForm.addEventListener('submit', handlePaymentSubmit);
 
-// Bulk payment event listeners
-bulkPaymentBtn.addEventListener('click', openBulkPaymentModal);
-closeBulkModalBtn.addEventListener('click', closeBulkPaymentModal);
-bulkPaymentModal.addEventListener('click', (e) => {
-    if (e.target === bulkPaymentModal) {
-        closeBulkPaymentModal();
-    }
-});
-bulkPaymentForm.addEventListener('submit', handleBulkPaymentSubmit);
-
 // Keyboard shortcut to close modal
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closePaymentModal();
-        closeBulkPaymentModal();
+        if (bulkPaymentModal) closeBulkPaymentModal();
     }
 });
 
 // Initialize the app when DOM is ready
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize bulk payment DOM elements
+    bulkPaymentBtn = document.getElementById('bulk-payment-btn');
+    bulkPaymentModal = document.getElementById('bulk-payment-modal');
+    bulkPaymentForm = document.getElementById('bulk-payment-form');
+    closeBulkModalBtn = document.getElementById('close-bulk-modal');
+    expenseCheckboxList = document.getElementById('expense-checkbox-list');
+
+    // Set up bulk payment event listeners
+    if (bulkPaymentBtn) {
+        bulkPaymentBtn.addEventListener('click', openBulkPaymentModal);
+    }
+    if (closeBulkModalBtn) {
+        closeBulkModalBtn.addEventListener('click', closeBulkPaymentModal);
+    }
+    if (bulkPaymentModal) {
+        bulkPaymentModal.addEventListener('click', (e) => {
+            if (e.target === bulkPaymentModal) {
+                closeBulkPaymentModal();
+            }
+        });
+    }
+    if (bulkPaymentForm) {
+        bulkPaymentForm.addEventListener('submit', handleBulkPaymentSubmit);
+    }
+
+    // Initialize the app
+    init();
+});
