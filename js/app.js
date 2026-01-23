@@ -555,10 +555,24 @@ function updateSummary() {
     let nextDue = null;
     let minDaysUntil = Infinity;
 
+    // Track if any expense has past due balance
+    let hasPastDue = false;
+    let pastDueExpense = null;
+
     EXPENSES.forEach(expense => {
         if (expense.type === 'goal') return;
 
-        // Skip if already paid this month
+        // For recurring expenses, check past due status
+        if (expense.type === 'recurring') {
+            const { pastDue } = getCreditOrPastDue(expense);
+            if (pastDue > 0) {
+                hasPastDue = true;
+                if (!pastDueExpense) pastDueExpense = expense;
+                return; // Don't process further, it's past due
+            }
+        }
+
+        // Skip if already paid this month (and not past due)
         if (hasPaymentForMonth(expense.id, month, year)) return;
 
         // For loans, skip if fully paid
@@ -579,7 +593,10 @@ function updateSummary() {
         }
     });
 
-    if (nextDue) {
+    if (hasPastDue && pastDueExpense) {
+        nextDueEl.textContent = `${pastDueExpense.name} (Past Due!)`;
+        nextDueEl.className = 'text-xl font-semibold text-red-400 truncate';
+    } else if (nextDue) {
         if (minDaysUntil < 0) {
             nextDueEl.textContent = `${nextDue.name} (Overdue!)`;
             nextDueEl.className = 'text-xl font-semibold text-red-400 truncate';
