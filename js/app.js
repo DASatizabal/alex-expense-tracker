@@ -23,6 +23,9 @@ let expenseCheckboxList;
 async function init() {
     showLoading(true);
 
+    // Display version
+    document.getElementById('version-tag').textContent = 'v' + APP_VERSION;
+
     try {
         // Load payments from storage
         payments = await SheetsAPI.getPayments();

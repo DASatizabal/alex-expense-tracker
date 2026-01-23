@@ -23,6 +23,15 @@ body {
     line-height: 1.6;
 }
 
+.version-tag {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    font-size: 0.7rem;
+    color: #ccc;
+    z-index: 100;
+}
+
 .container {
     max-width: 800px;
     margin: 0 auto;
