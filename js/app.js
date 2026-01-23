@@ -764,13 +764,16 @@ function openBulkPaymentModal() {
         // Skip goals - they have variable amounts
         if (expense.type === 'goal') return;
 
-        // Skip if already paid this month
-        if (hasPaymentForMonth(expense.id, month, year)) return;
-
-        // For loans, skip if fully paid
-        if (expense.type === 'loan') {
+        // For recurring expenses, include if past due OR not paid this month
+        if (expense.type === 'recurring') {
+            const { pastDue } = getCreditOrPastDue(expense);
+            // Skip only if no past due AND paid this month
+            if (pastDue === 0 && hasPaymentForMonth(expense.id, month, year)) return;
+        } else if (expense.type === 'loan') {
+            // For loans, skip if fully paid or paid this month
             const paymentCount = getPaymentCountForCategory(expense.id);
             if (paymentCount >= expense.totalPayments) return;
+            if (hasPaymentForMonth(expense.id, month, year)) return;
         }
 
         const checkItem = document.createElement('label');
@@ -786,7 +789,7 @@ function openBulkPaymentModal() {
 
     // Show message if no unpaid expenses
     if (expenseCheckboxList.children.length === 0) {
-        expenseCheckboxList.innerHTML = '<p class="text-center text-slate-500 py-4">All expenses are paid for this month!</p>';
+        expenseCheckboxList.innerHTML = '<p class="text-center text-slate-500 py-4">All expenses are paid and current!</p>';
     }
 
     bulkPaymentModal.classList.remove('hidden');
