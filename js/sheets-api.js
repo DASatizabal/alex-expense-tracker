@@ -53,12 +53,14 @@ const SheetsAPI = {
             payment.id = this.generateId();
             payment.timestamp = new Date().toISOString();
 
+            // Use text/plain to avoid CORS preflight (Apps Script limitation)
             const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'text/plain'
                 },
-                body: JSON.stringify(payment)
+                body: JSON.stringify(payment),
+                redirect: 'follow'
             });
 
             const data = await response.json();
@@ -66,6 +68,9 @@ const SheetsAPI = {
             if (data.error) {
                 throw new Error(data.error);
             }
+
+            // Also save to localStorage for offline access
+            this.addToLocalStorage(payment);
 
             return data.payment;
         } catch (error) {
@@ -77,15 +82,17 @@ const SheetsAPI = {
 
     async deletePaymentFromSheets(paymentId) {
         try {
+            // Use text/plain to avoid CORS preflight (Apps Script limitation)
             const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'text/plain'
                 },
                 body: JSON.stringify({
                     action: 'delete',
                     id: paymentId
-                })
+                }),
+                redirect: 'follow'
             });
 
             const data = await response.json();
@@ -129,6 +136,14 @@ const SheetsAPI = {
 
         localStorage.setItem('alex_expense_payments', JSON.stringify(payments));
         return payment;
+    },
+
+    // Add payment to localStorage without generating new ID (for syncing from cloud)
+    addToLocalStorage(payment) {
+        const payments = this.getPaymentsFromLocalStorage();
+        payments.push(payment);
+        payments.sort((a, b) => new Date(b.date) - new Date(a.date));
+        localStorage.setItem('alex_expense_payments', JSON.stringify(payments));
     },
 
     // Delete a payment

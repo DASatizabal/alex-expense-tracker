@@ -57,6 +57,11 @@ function doGet(e) {
  */
 function doPost(e) {
   try {
+    // Handle missing or malformed request
+    if (!e || !e.postData || !e.postData.contents) {
+      return createResponse({ error: 'No data received' }, 400);
+    }
+
     const data = JSON.parse(e.postData.contents);
 
     // Handle delete action
@@ -68,7 +73,7 @@ function doPost(e) {
     return addPayment(data);
 
   } catch (error) {
-    return createResponse({ error: error.message }, 500);
+    return createResponse({ error: 'Parse error: ' + error.message }, 500);
   }
 }
 
