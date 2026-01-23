@@ -61,10 +61,10 @@ const EXPENSES = [
         id: 'cruise',
         name: 'Cruise',
         icon: '\u{1F6F3}',
-        amount: 1371.33,
+        amount: 1371.50,
         type: 'goal',
         dueDate: new Date('2026-07-23'), // Due July 23, 2026
-        description: 'Cruise savings goal - $1,371.33 by July 23, 2026'
+        description: 'Cruise savings goal - $1,371.50 by July 23, 2026'
     }
 ];
 
