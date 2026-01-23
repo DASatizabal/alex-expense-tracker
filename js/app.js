@@ -49,10 +49,16 @@ function getCurrentMonthYear() {
     return { month: now.getMonth(), year: now.getFullYear() };
 }
 
+// Parse date string as local date (fixes timezone issue with "YYYY-MM-DD" format)
+function parseLocalDate(dateStr) {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+}
+
 // Check if a payment exists for an expense in a given month
 function hasPaymentForMonth(expenseId, month, year) {
     return payments.some(payment => {
-        const paymentDate = new Date(payment.date);
+        const paymentDate = parseLocalDate(payment.date);
         return payment.category === expenseId &&
                paymentDate.getMonth() === month &&
                paymentDate.getFullYear() === year;
@@ -235,7 +241,7 @@ function renderPaymentHistory() {
         const li = document.createElement('li');
         li.className = 'payment-item';
 
-        const date = new Date(payment.date);
+        const date = parseLocalDate(payment.date);
         const formattedDate = date.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
