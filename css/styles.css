@@ -460,22 +460,25 @@ header h1 {
     width: 18px;
     height: 18px;
     min-width: 18px;
-    margin-right: 12px;
+    margin-right: 10px;
     flex-shrink: 0;
     cursor: pointer;
     accent-color: var(--primary-color);
 }
 
-.expense-check-label {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.expense-check-icon {
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.expense-check-name {
     flex: 1;
 }
 
 .expense-check-amount {
     font-weight: 600;
     color: var(--primary-color);
+    margin-left: auto;
 }
 
 .expense-checkbox-list .no-expenses {

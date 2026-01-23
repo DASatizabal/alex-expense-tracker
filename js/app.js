@@ -423,13 +423,7 @@ function openBulkPaymentModal() {
 
         const checkItem = document.createElement('label');
         checkItem.className = 'expense-check-item';
-        checkItem.innerHTML = `
-            <input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}">
-            <span class="expense-check-label">
-                <span>${expense.icon} ${expense.name}</span>
-                <span class="expense-check-amount">$${expense.amount}</span>
-            </span>
-        `;
+        checkItem.innerHTML = `<input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}"><span class="expense-check-icon">${expense.icon}</span><span class="expense-check-name">${expense.name}</span><span class="expense-check-amount">$${expense.amount}</span>`;
         expenseCheckboxList.appendChild(checkItem);
     });
 
