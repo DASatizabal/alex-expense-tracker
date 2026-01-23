@@ -1,6 +1,6 @@
 // Configuration for Alex's Expense Tracker
 
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '2.2.1';
 
 const CONFIG = {
     // Google Apps Script URL
