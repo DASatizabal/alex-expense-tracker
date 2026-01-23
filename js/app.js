@@ -58,6 +58,14 @@ function parseLocalDate(dateStr) {
     return new Date(year, month - 1, day);
 }
 
+// Format currency with comma separators
+function formatCurrency(amount, decimals = 2) {
+    return amount.toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+}
+
 // Check if a payment exists for an expense in a given month
 function hasPaymentForMonth(expenseId, month, year) {
     return payments.some(payment => {
@@ -244,13 +252,13 @@ function createExpenseCard(expense) {
 
         let paycheckBreakdown = '';
         if (remainingBalance > 0 && paychecksRemaining > 0) {
-            paycheckBreakdown = `<div class="paycheck-breakdown">${paychecksRemaining} paychecks left · $${perPaycheck.toFixed(2)}/paycheck</div>`;
+            paycheckBreakdown = `<div class="paycheck-breakdown">${paychecksRemaining} paychecks left · $${formatCurrency(perPaycheck)}/paycheck</div>`;
         }
 
         progressHTML = `
             <div class="progress-section">
                 <div class="progress-label">
-                    <span>$${totalSaved.toFixed(0)} of $${expense.amount}</span>
+                    <span>$${formatCurrency(totalSaved, 0)} of $${formatCurrency(expense.amount)}</span>
                     <span>${percentage}%</span>
                 </div>
                 <div class="progress-bar">
@@ -274,8 +282,8 @@ function createExpenseCard(expense) {
         : `Due: ${expense.dueDay}${getOrdinalSuffix(expense.dueDay)} of month`;
 
     const amountText = expense.type === 'goal'
-        ? `$${expense.amount} total`
-        : `$${expense.amount}/month`;
+        ? `$${formatCurrency(expense.amount)} total`
+        : `$${formatCurrency(expense.amount)}/month`;
 
     card.innerHTML = `
         <div class="expense-header">
@@ -328,7 +336,7 @@ function renderPaymentHistory() {
                 <span class="payment-date">${formattedDate}${payment.notes ? ' - ' + payment.notes : ''}</span>
             </div>
             <div class="payment-actions">
-                <span class="payment-amount">$${payment.amount.toFixed(2)}</span>
+                <span class="payment-amount">$${formatCurrency(payment.amount)}</span>
                 <button class="btn-delete" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">&times;</button>
             </div>
         `;
@@ -361,7 +369,7 @@ function updateSummary() {
         remainingAmount += expense.amount;
     });
 
-    monthlyTotalEl.textContent = `$${remainingAmount}`;
+    monthlyTotalEl.textContent = `$${formatCurrency(remainingAmount)}`;
 
     // Find next due expense
 
@@ -544,7 +552,7 @@ function openBulkPaymentModal() {
 
         const checkItem = document.createElement('label');
         checkItem.className = 'expense-check-item';
-        checkItem.innerHTML = `<input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}"><span class="expense-check-icon">${expense.icon}</span><span class="expense-check-name">${expense.name}</span><span class="expense-check-amount">$${expense.amount}</span>`;
+        checkItem.innerHTML = `<input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}"><span class="expense-check-icon">${expense.icon}</span><span class="expense-check-name">${expense.name}</span><span class="expense-check-amount">$${formatCurrency(expense.amount)}</span>`;
         expenseCheckboxList.appendChild(checkItem);
     });
 
