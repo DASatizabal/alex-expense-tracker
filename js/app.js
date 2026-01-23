@@ -419,7 +419,36 @@ function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
         : `Record ${expense.name} Payment`;
 
     document.getElementById('payment-category').value = categoryId;
-    document.getElementById('payment-amount').value = defaultAmount || '';
+
+    // For goals/savings, calculate suggested per-paycheck amount
+    let suggestedAmount = defaultAmount;
+    if (isSavings && expense.type === 'goal') {
+        const totalSaved = getTotalPaymentsForCategory(expense.id);
+        const remainingBalance = expense.amount - totalSaved;
+
+        // Calculate paychecks remaining
+        const paycheckStart = new Date(2026, 0, 22);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dueDate = new Date(expense.dueDate);
+        dueDate.setHours(23, 59, 59, 999);
+
+        let paychecksRemaining = 0;
+        let currentPaycheck = new Date(paycheckStart);
+        while (currentPaycheck < today) {
+            currentPaycheck.setDate(currentPaycheck.getDate() + 14);
+        }
+        while (currentPaycheck <= dueDate) {
+            paychecksRemaining++;
+            currentPaycheck.setDate(currentPaycheck.getDate() + 14);
+        }
+
+        if (paychecksRemaining > 0 && remainingBalance > 0) {
+            suggestedAmount = (remainingBalance / paychecksRemaining).toFixed(2);
+        }
+    }
+
+    document.getElementById('payment-amount').value = suggestedAmount || '';
     document.getElementById('payment-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('payment-notes').value = '';
 
