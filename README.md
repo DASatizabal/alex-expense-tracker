@@ -1,16 +1,21 @@
 # Alex's Expense Tracker
 
-A simple, mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Syncs with Google Sheets for cloud storage.
+**Version 2.1.1** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
+
+A modern, mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for cloud storage.
 
 ## Features
 
 - **Recurring Expenses** - Track monthly bills like rent, insurance, and phone
-- **Loan Tracking** - Monitor progress on loans with payment counts (e.g., 12 of 84 payments)
-- **Savings Goals** - Track progress toward financial goals with target dates
-- **Visual Status** - Color-coded cards show paid, due soon, and overdue items
-- **Payment History** - View recent payments with dates and notes
+- **Loan Tracking** - Monitor progress on loans with payment counts (e.g., "12 of 84 payments")
+- **Savings Goals** - Track progress toward financial goals with target dates and per-paycheck breakdowns
+- **Bulk Payments** - Mark multiple expenses as paid in one action
+- **Visual Status** - Color-coded cards show paid, due soon, overdue, and pending items
+- **Smart Sorting** - Unpaid items first, sorted by due date and amount
+- **Payment History** - View and delete recent payments with dates and notes
 - **Cloud Sync** - Data stored in Google Sheets via Apps Script backend
 - **Offline Fallback** - Works with localStorage when offline
+- **Modern UI** - Dark glassmorphism theme with animations (Tailwind CSS + Lucide icons)
 
 ## Quick Start
 
@@ -34,22 +39,23 @@ See [SETUP.md](SETUP.md) for detailed instructions to connect to Google Sheets.
 ## Project Structure
 
 ```
-Alex Expense Tracker/
-├── index.html              # Main HTML page
+alex-expense-tracker/
+├── index.html              # Main HTML page (Tailwind + Lucide icons via CDN)
 ├── google-apps-script.js   # Backend script (copy to Google Apps Script)
 ├── css/
-│   └── styles.css          # Styling
+│   └── styles.css          # Custom styling (animations, scrollbars)
 ├── js/
-│   ├── config.js           # Configuration (expenses, API URL)
+│   ├── config.js           # Configuration (expenses, API URL, version)
 │   ├── sheets-api.js       # API layer (cloud + localStorage)
 │   └── app.js              # Main application logic
+├── README.md               # This file
 ├── SETUP.md                # Google Sheets setup guide
-└── README.md               # This file
+└── RESUME.md               # Project summary for quick reference
 ```
 
 ## Configuration
 
-Edit `js/config.js` to customize:
+Edit `js/config.js` to customize expenses and settings:
 
 ```javascript
 const CONFIG = {
@@ -61,12 +67,31 @@ const EXPENSES = [
     {
         id: 'rent',
         name: 'Rent',
-        icon: '🏠',
+        icon: '\u{1F3E0}',      // Unicode emoji
         amount: 300,
-        type: 'recurring',  // recurring, loan, or goal
-        dueDay: 1           // Day of month
+        type: 'recurring',      // recurring, loan, or goal
+        dueDay: 1,              // Day of month (1-31)
+        description: 'Monthly rent payment'
     },
-    // Add more expenses...
+    {
+        id: 'car',
+        name: 'Car Payment',
+        icon: '\u{1F697}',
+        amount: 300,
+        type: 'loan',
+        dueDay: 1,
+        totalPayments: 84,      // Total loan payments
+        description: 'Car loan'
+    },
+    {
+        id: 'savings',
+        name: 'Vacation',
+        icon: '\u{1F3D6}',
+        amount: 1000,
+        type: 'goal',
+        dueDate: new Date('2026-12-01'),  // Target date
+        description: 'Vacation fund'
+    }
 ];
 ```
 
@@ -77,6 +102,13 @@ const EXPENSES = [
 | `recurring` | Monthly bills | `amount`, `dueDay` |
 | `loan` | Tracked payment count | `amount`, `dueDay`, `totalPayments` |
 | `goal` | Savings target | `amount`, `dueDate` |
+
+## Tech Stack
+
+- **Frontend**: HTML5, Vanilla JavaScript, Tailwind CSS (CDN), Lucide Icons
+- **Backend**: Google Apps Script (serverless)
+- **Storage**: Google Sheets (primary), localStorage (fallback)
+- **Hosting**: GitHub Pages
 
 ## How It Works
 
