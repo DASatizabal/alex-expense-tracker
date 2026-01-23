@@ -21,8 +21,12 @@
 }
 
 /* Date input styling for dark mode */
-input[type="date"]::-webkit-calendar-picker-indicator {
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(0.7);
+    cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
 }
 

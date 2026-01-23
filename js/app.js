@@ -137,11 +137,13 @@ function parseLocalDate(dateStr) {
     return new Date(year, month - 1, day);
 }
 
-// Format currency with comma separators
-function formatCurrency(amount, decimals = 2) {
+// Format currency with comma separators (hide .00 cents)
+function formatCurrency(amount) {
+    // Check if amount has cents
+    const hasCents = amount % 1 !== 0;
     return amount.toLocaleString('en-US', {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals
+        minimumFractionDigits: hasCents ? 2 : 0,
+        maximumFractionDigits: hasCents ? 2 : 0
     });
 }
 
@@ -287,7 +289,7 @@ function createExpenseCard(expense) {
                              status === 'due-soon' ? 'expense-card-due-soon' :
                              status === 'overdue' ? 'expense-card-overdue' : 'expense-card-pending';
 
-    card.className = `group relative bg-white/5 backdrop-blur-xl rounded-2xl p-5 border-l-4 border border-white/10 hover:bg-white/10 transition-all duration-300 ${borderColorClass}`;
+    card.className = `group relative bg-black/5 dark:bg-white/5 backdrop-blur-xl rounded-2xl p-5 border-l-4 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-all duration-300 ${borderColorClass}`;
 
     let progressHTML = '';
     let actionButton = '';
@@ -305,11 +307,11 @@ function createExpenseCard(expense) {
         const percentage = Math.round((paymentCount / expense.totalPayments) * 100);
         progressHTML = `
             <div class="mt-4">
-                <div class="flex justify-between text-sm text-slate-400 mb-2">
+                <div class="flex justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
                     <span>${paymentCount} of ${expense.totalPayments} payments</span>
                     <span>${percentage}%</span>
                 </div>
-                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div class="h-2 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                     <div class="h-full progress-gradient rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
                 </div>
             </div>
@@ -352,11 +354,11 @@ function createExpenseCard(expense) {
 
         progressHTML = `
             <div class="mt-4">
-                <div class="flex justify-between text-sm text-slate-400 mb-2">
-                    <span>$${formatCurrency(totalSaved, 0)} of $${formatCurrency(expense.amount)}</span>
+                <div class="flex justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
+                    <span>$${formatCurrency(totalSaved)} of $${formatCurrency(expense.amount)}</span>
                     <span>${percentage}%</span>
                 </div>
-                <div class="h-2 bg-white/10 rounded-full overflow-hidden">
+                <div class="h-2 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
                     <div class="h-full progress-gradient rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
                 </div>
                 ${paycheckBreakdown}
@@ -384,12 +386,12 @@ function createExpenseCard(expense) {
         <div class="flex justify-between items-start mb-3">
             <div class="flex items-center gap-3">
                 <span class="text-2xl">${expense.icon}</span>
-                <span class="font-semibold text-white">${expense.name}</span>
+                <span class="font-semibold text-slate-900 dark:text-white">${expense.name}</span>
             </div>
-            <span class="text-lg font-bold text-violet-400">${amountText}</span>
+            <span class="text-lg font-bold text-violet-600 dark:text-violet-400">${amountText}</span>
         </div>
         <div class="flex items-center gap-3">
-            <span class="text-sm text-slate-400">${dueText}</span>
+            <span class="text-sm text-slate-500 dark:text-slate-400">${dueText}</span>
             <span class="px-2.5 py-1 text-xs font-medium rounded-full ${statusColors[status]}">${label}</span>
         </div>
         ${progressHTML}
@@ -404,7 +406,7 @@ function renderPaymentHistory() {
     paymentHistory.innerHTML = '';
 
     if (payments.length === 0) {
-        paymentHistory.innerHTML = '<li class="px-6 py-8 text-center text-slate-500">No payments recorded yet</li>';
+        paymentHistory.innerHTML = '<li class="px-6 py-8 text-center text-slate-500 dark:text-slate-500">No payments recorded yet</li>';
         return;
     }
 
@@ -414,7 +416,7 @@ function renderPaymentHistory() {
     recentPayments.forEach(payment => {
         const expense = EXPENSES.find(e => e.id === payment.category);
         const li = document.createElement('li');
-        li.className = 'flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors';
+        li.className = 'flex items-center justify-between px-6 py-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors';
 
         const date = parseLocalDate(payment.date);
         const formattedDate = date.toLocaleDateString('en-US', {
@@ -427,12 +429,12 @@ function renderPaymentHistory() {
             <div class="flex items-center gap-3">
                 <span class="text-xl">${expense ? expense.icon : ''}</span>
                 <div>
-                    <div class="font-medium text-white">${expense ? expense.name : payment.category}</div>
+                    <div class="font-medium text-slate-900 dark:text-white">${expense ? expense.name : payment.category}</div>
                     <div class="text-sm text-slate-500">${formattedDate}${payment.notes ? ' · ' + payment.notes : ''}</div>
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <span class="font-semibold text-emerald-400">$${formatCurrency(payment.amount)}</span>
+                <span class="font-semibold text-emerald-600 dark:text-emerald-400">$${formatCurrency(payment.amount)}</span>
                 <button class="p-2 hover:bg-red-500/20 rounded-lg transition-colors group" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">
                     <i data-lucide="trash-2" class="w-4 h-4 text-slate-500 group-hover:text-red-400"></i>
                 </button>
@@ -655,19 +657,19 @@ function openBulkPaymentModal() {
         }
 
         const checkItem = document.createElement('label');
-        checkItem.className = 'flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors';
+        checkItem.className = 'flex items-center gap-3 p-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors';
         checkItem.innerHTML = `
-            <input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}" class="w-5 h-5 rounded border-white/20 bg-white/5 text-violet-600 focus:ring-violet-500 focus:ring-offset-0">
+            <input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}" class="w-5 h-5 rounded border-black/20 dark:border-white/20 bg-black/5 dark:bg-white/5 text-violet-600 focus:ring-violet-500 focus:ring-offset-0">
             <span class="text-lg">${expense.icon}</span>
-            <span class="flex-1 text-white">${expense.name}</span>
-            <span class="font-semibold text-violet-400">$${formatCurrency(expense.amount)}</span>
+            <span class="flex-1 text-slate-900 dark:text-white">${expense.name}</span>
+            <span class="font-semibold text-violet-600 dark:text-violet-400">$${formatCurrency(expense.amount)}</span>
         `;
         expenseCheckboxList.appendChild(checkItem);
     });
 
     // Show message if no unpaid expenses
     if (expenseCheckboxList.children.length === 0) {
-        expenseCheckboxList.innerHTML = '<p class="text-center text-slate-500 py-4">All expenses are paid for this month!</p>';
+        expenseCheckboxList.innerHTML = '<p class="text-center text-slate-500 dark:text-slate-500 py-4">All expenses are paid for this month!</p>';
     }
 
     bulkPaymentModal.classList.remove('hidden');

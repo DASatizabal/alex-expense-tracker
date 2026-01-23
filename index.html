@@ -51,16 +51,16 @@
 
     <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="dark font-sans min-h-screen bg-slate-950 text-slate-100 antialiased">
+<body class="dark font-sans min-h-screen bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors duration-300">
     <!-- Background gradient -->
     <div class="fixed inset-0 -z-10 overflow-hidden">
-        <div class="absolute top-1/4 -left-1/4 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl animate-pulse-glow"></div>
-        <div class="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-cyan-600/20 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 1s;"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/4 -left-1/4 w-96 h-96 bg-violet-400/20 dark:bg-violet-600/20 rounded-full blur-3xl animate-pulse-glow"></div>
+        <div class="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-cyan-400/20 dark:bg-cyan-600/20 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 1s;"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-400/10 dark:bg-indigo-600/10 rounded-full blur-3xl"></div>
     </div>
 
     <!-- Theme Toggle & Version -->
-    <button class="fixed top-4 right-16 z-50 p-2 rounded-xl bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-all duration-200" id="theme-toggle" title="Toggle theme">
+    <button class="fixed top-4 right-16 z-50 p-2 rounded-xl bg-black/5 dark:bg-white/5 backdrop-blur-md border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-all duration-200" id="theme-toggle" title="Toggle theme">
         <i data-lucide="moon" class="w-5 h-5"></i>
     </button>
     <span class="fixed top-5 right-4 z-50 text-xs text-slate-500" id="version-tag"></span>
@@ -68,40 +68,40 @@
     <div class="container mx-auto max-w-4xl px-4 py-8">
         <!-- Header -->
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-violet-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent mb-2">
+            <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-violet-600 dark:from-violet-400 via-cyan-600 dark:via-cyan-400 to-violet-600 dark:to-violet-400 bg-clip-text text-transparent mb-2">
                 Alex's Expense Tracker
             </h1>
-            <p class="text-slate-400 text-sm">Track expenses, manage payments, reach your goals</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">Track expenses, manage payments, reach your goals</p>
         </header>
 
         <!-- Summary Cards -->
         <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <!-- Remaining Card -->
-            <div class="group relative bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-violet-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/10">
+            <div class="group relative bg-black/5 dark:bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-black/10 dark:border-white/10 hover:border-violet-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/10">
                 <div class="absolute inset-0 bg-gradient-to-br from-violet-600/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative">
-                    <div class="flex items-center gap-2 text-slate-400 text-sm mb-2">
+                    <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm mb-2">
                         <i data-lucide="wallet" class="w-4 h-4"></i>
                         <span>Remaining This Month</span>
                     </div>
-                    <div class="text-3xl font-bold text-white" id="monthly-total">$0</div>
+                    <div class="text-3xl font-bold text-slate-900 dark:text-white" id="monthly-total">$0</div>
                 </div>
             </div>
 
             <!-- Next Due Card -->
-            <div class="group relative bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10">
+            <div class="group relative bg-black/5 dark:bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-black/10 dark:border-white/10 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10">
                 <div class="absolute inset-0 bg-gradient-to-br from-cyan-600/10 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 <div class="relative">
-                    <div class="flex items-center gap-2 text-slate-400 text-sm mb-2">
+                    <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm mb-2">
                         <i data-lucide="calendar-clock" class="w-4 h-4"></i>
                         <span>Next Due</span>
                     </div>
-                    <div class="text-xl font-semibold text-white truncate" id="next-due">-</div>
+                    <div class="text-xl font-semibold text-slate-900 dark:text-white truncate" id="next-due">-</div>
                 </div>
             </div>
 
             <!-- Bulk Payment Button Card -->
-            <div class="relative bg-gradient-to-br from-violet-600/20 to-cyan-600/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10 flex items-center justify-center">
+            <div class="relative bg-gradient-to-br from-violet-600/20 to-cyan-600/20 backdrop-blur-xl rounded-2xl p-6 border border-black/10 dark:border-white/10 flex items-center justify-center">
                 <button class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40 hover:scale-105" id="bulk-payment-btn">
                     <i data-lucide="plus-circle" class="w-5 h-5"></i>
                     Bulk Payment
@@ -115,12 +115,12 @@
         </section>
 
         <!-- Recent Payments Section -->
-        <section class="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
-            <div class="px-6 py-4 border-b border-white/10 flex items-center gap-2">
-                <i data-lucide="history" class="w-5 h-5 text-slate-400"></i>
-                <h2 class="text-lg font-semibold text-white">Recent Payments</h2>
+        <section class="bg-black/5 dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-black/10 dark:border-white/10 overflow-hidden">
+            <div class="px-6 py-4 border-b border-black/10 dark:border-white/10 flex items-center gap-2">
+                <i data-lucide="history" class="w-5 h-5 text-slate-500 dark:text-slate-400"></i>
+                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Recent Payments</h2>
             </div>
-            <ul class="divide-y divide-white/5" id="payment-history">
+            <ul class="divide-y divide-black/5 dark:divide-white/5" id="payment-history">
                 <!-- Payment history will be rendered here by JavaScript -->
             </ul>
         </section>
@@ -128,29 +128,29 @@
         <!-- Payment Modal -->
         <div class="fixed inset-0 z-50 hidden items-center justify-center p-4" id="payment-modal">
             <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="payment-modal-backdrop"></div>
-            <div class="relative w-full max-w-md bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl animate-slide-up">
-                <div class="flex items-center justify-between p-6 border-b border-white/10">
-                    <h3 class="text-xl font-semibold text-white" id="modal-title">Record Payment</h3>
-                    <button class="p-2 hover:bg-white/10 rounded-lg transition-colors" id="close-modal">
-                        <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
+            <div class="relative w-full max-w-md bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-black/10 dark:border-white/10 shadow-2xl animate-slide-up">
+                <div class="flex items-center justify-between p-6 border-b border-black/10 dark:border-white/10">
+                    <h3 class="text-xl font-semibold text-slate-900 dark:text-white" id="modal-title">Record Payment</h3>
+                    <button class="p-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors" id="close-modal">
+                        <i data-lucide="x" class="w-5 h-5 text-slate-500 dark:text-slate-400"></i>
                     </button>
                 </div>
                 <form id="payment-form" class="p-6 space-y-4">
                     <input type="hidden" id="payment-category">
                     <div>
-                        <label for="payment-amount" class="block text-sm font-medium text-slate-400 mb-2">Amount ($)</label>
+                        <label for="payment-amount" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Amount ($)</label>
                         <input type="number" id="payment-amount" step="0.01" required
-                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
+                            class="w-full px-4 py-3 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
                     <div>
-                        <label for="payment-date" class="block text-sm font-medium text-slate-400 mb-2">Date</label>
+                        <label for="payment-date" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Date</label>
                         <input type="date" id="payment-date" required
-                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
+                            class="w-full px-4 py-3 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
                     <div>
-                        <label for="payment-notes" class="block text-sm font-medium text-slate-400 mb-2">Notes (optional)</label>
+                        <label for="payment-notes" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Notes (optional)</label>
                         <input type="text" id="payment-notes" placeholder="e.g., Paid to Mom, Paid to David, etc."
-                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
+                            class="w-full px-4 py-3 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
                     <button type="submit"
                         class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40">
@@ -163,29 +163,29 @@
         <!-- Bulk Payment Modal -->
         <div class="fixed inset-0 z-50 hidden items-center justify-center p-4" id="bulk-payment-modal">
             <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="bulk-modal-backdrop"></div>
-            <div class="relative w-full max-w-md bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl animate-slide-up">
-                <div class="flex items-center justify-between p-6 border-b border-white/10">
-                    <h3 class="text-xl font-semibold text-white">Bulk Payment</h3>
-                    <button class="p-2 hover:bg-white/10 rounded-lg transition-colors" id="close-bulk-modal">
-                        <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
+            <div class="relative w-full max-w-md bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-black/10 dark:border-white/10 shadow-2xl animate-slide-up">
+                <div class="flex items-center justify-between p-6 border-b border-black/10 dark:border-white/10">
+                    <h3 class="text-xl font-semibold text-slate-900 dark:text-white">Bulk Payment</h3>
+                    <button class="p-2 hover:bg-black/10 dark:hover:bg-white/10 rounded-lg transition-colors" id="close-bulk-modal">
+                        <i data-lucide="x" class="w-5 h-5 text-slate-500 dark:text-slate-400"></i>
                     </button>
                 </div>
                 <form id="bulk-payment-form" class="p-6 space-y-4">
                     <div>
-                        <label for="bulk-payment-date" class="block text-sm font-medium text-slate-400 mb-2">Payment Date</label>
+                        <label for="bulk-payment-date" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Payment Date</label>
                         <input type="date" id="bulk-payment-date" required
-                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
+                            class="w-full px-4 py-3 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-2">Select Expenses to Pay</label>
-                        <div class="max-h-60 overflow-y-auto bg-white/5 border border-white/10 rounded-xl p-2 space-y-1" id="expense-checkbox-list">
+                        <label class="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Select Expenses to Pay</label>
+                        <div class="max-h-60 overflow-y-auto bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl p-2 space-y-1" id="expense-checkbox-list">
                             <!-- Checkboxes will be rendered by JavaScript -->
                         </div>
                     </div>
                     <div>
-                        <label for="bulk-payment-notes" class="block text-sm font-medium text-slate-400 mb-2">Notes (optional)</label>
+                        <label for="bulk-payment-notes" class="block text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Notes (optional)</label>
                         <input type="text" id="bulk-payment-notes" placeholder="Paid to Mom, Paid to David, etc."
-                            class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
+                            class="w-full px-4 py-3 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
                     <button type="submit"
                         class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40">
@@ -196,10 +196,10 @@
         </div>
 
         <!-- Loading Overlay -->
-        <div class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm" id="loading">
+        <div class="fixed inset-0 z-[100] hidden items-center justify-center bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm" id="loading">
             <div class="flex flex-col items-center gap-4">
                 <div class="w-12 h-12 border-4 border-violet-600/30 border-t-violet-600 rounded-full animate-spin"></div>
-                <p class="text-slate-400">Loading...</p>
+                <p class="text-slate-500 dark:text-slate-400">Loading...</p>
             </div>
         </div>
     </div>
