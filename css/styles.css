@@ -406,6 +406,55 @@ header h1 {
     }
 }
 
+/* Expense Checkbox List (Bulk Payment) */
+.expense-checkbox-list {
+    max-height: 250px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.expense-check-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 10px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.expense-check-item:hover {
+    background-color: var(--bg-color);
+}
+
+.expense-check-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+.expense-check-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+}
+
+.expense-check-amount {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.expense-checkbox-list .no-expenses {
+    text-align: center;
+    color: var(--text-light);
+    padding: 20px;
+    margin: 0;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .container {

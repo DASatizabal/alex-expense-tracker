@@ -12,6 +12,13 @@ const paymentForm = document.getElementById('payment-form');
 const closeModalBtn = document.getElementById('close-modal');
 const loadingOverlay = document.getElementById('loading');
 
+// Bulk Payment DOM Elements
+const bulkPaymentBtn = document.getElementById('bulk-payment-btn');
+const bulkPaymentModal = document.getElementById('bulk-payment-modal');
+const bulkPaymentForm = document.getElementById('bulk-payment-form');
+const closeBulkModalBtn = document.getElementById('close-bulk-modal');
+const expenseCheckboxList = document.getElementById('expense-checkbox-list');
+
 // Initialize the app
 async function init() {
     showLoading(true);
@@ -358,6 +365,98 @@ async function handlePaymentSubmit(e) {
     }
 }
 
+// Open bulk payment modal
+function openBulkPaymentModal() {
+    const { month, year } = getCurrentMonthYear();
+
+    // Set date to today
+    document.getElementById('bulk-payment-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('bulk-payment-notes').value = '';
+
+    // Build checkbox list of unpaid recurring/loan expenses
+    expenseCheckboxList.innerHTML = '';
+
+    EXPENSES.forEach(expense => {
+        // Skip goals - they have variable amounts
+        if (expense.type === 'goal') return;
+
+        // Skip if already paid this month
+        if (hasPaymentForMonth(expense.id, month, year)) return;
+
+        // For loans, skip if fully paid
+        if (expense.type === 'loan') {
+            const paymentCount = getPaymentCountForCategory(expense.id);
+            if (paymentCount >= expense.totalPayments) return;
+        }
+
+        const checkItem = document.createElement('label');
+        checkItem.className = 'expense-check-item';
+        checkItem.innerHTML = `
+            <input type="checkbox" name="expense" value="${expense.id}" data-amount="${expense.amount}">
+            <span class="expense-check-label">
+                <span>${expense.icon} ${expense.name}</span>
+                <span class="expense-check-amount">$${expense.amount}</span>
+            </span>
+        `;
+        expenseCheckboxList.appendChild(checkItem);
+    });
+
+    // Show message if no unpaid expenses
+    if (expenseCheckboxList.children.length === 0) {
+        expenseCheckboxList.innerHTML = '<p class="no-expenses">All expenses are paid for this month!</p>';
+    }
+
+    bulkPaymentModal.classList.add('active');
+}
+
+// Close bulk payment modal
+function closeBulkPaymentModal() {
+    bulkPaymentModal.classList.remove('active');
+}
+
+// Handle bulk payment form submission
+async function handleBulkPaymentSubmit(e) {
+    e.preventDefault();
+
+    const date = document.getElementById('bulk-payment-date').value;
+    const notes = document.getElementById('bulk-payment-notes').value;
+    const checkboxes = expenseCheckboxList.querySelectorAll('input[type="checkbox"]:checked');
+
+    if (checkboxes.length === 0) {
+        alert('Please select at least one expense to pay');
+        return;
+    }
+
+    showLoading(true);
+
+    try {
+        // Save each selected payment
+        for (const checkbox of checkboxes) {
+            const payment = {
+                category: checkbox.value,
+                amount: parseFloat(checkbox.dataset.amount),
+                date: date,
+                notes: notes
+            };
+            await SheetsAPI.savePayment(payment);
+        }
+
+        // Refresh payments data
+        payments = await SheetsAPI.getPayments();
+
+        renderExpenseCards();
+        renderPaymentHistory();
+        updateSummary();
+
+        closeBulkPaymentModal();
+    } catch (error) {
+        console.error('Error saving bulk payments:', error);
+        alert('Failed to save payments. Please try again.');
+    } finally {
+        showLoading(false);
+    }
+}
+
 // Event Listeners
 closeModalBtn.addEventListener('click', closePaymentModal);
 paymentModal.addEventListener('click', (e) => {
@@ -367,10 +466,21 @@ paymentModal.addEventListener('click', (e) => {
 });
 paymentForm.addEventListener('submit', handlePaymentSubmit);
 
+// Bulk payment event listeners
+bulkPaymentBtn.addEventListener('click', openBulkPaymentModal);
+closeBulkModalBtn.addEventListener('click', closeBulkPaymentModal);
+bulkPaymentModal.addEventListener('click', (e) => {
+    if (e.target === bulkPaymentModal) {
+        closeBulkPaymentModal();
+    }
+});
+bulkPaymentForm.addEventListener('submit', handleBulkPaymentSubmit);
+
 // Keyboard shortcut to close modal
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closePaymentModal();
+        closeBulkPaymentModal();
     }
 });
 

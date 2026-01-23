@@ -21,6 +21,9 @@
                 <span class="label">Next Due:</span>
                 <span class="value" id="next-due">-</span>
             </div>
+            <div class="summary-item">
+                <button class="btn btn-primary" id="bulk-payment-btn">+ Bulk Payment</button>
+            </div>
         </section>
 
         <section class="expenses-grid" id="expenses-container">
@@ -54,6 +57,31 @@
                         <input type="text" id="payment-notes" placeholder="e.g., January payment">
                     </div>
                     <button type="submit" class="btn btn-primary">Save Payment</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Modal for bulk payments -->
+        <div class="modal" id="bulk-payment-modal">
+            <div class="modal-content">
+                <span class="close-btn" id="close-bulk-modal">&times;</span>
+                <h3>Bulk Payment</h3>
+                <form id="bulk-payment-form">
+                    <div class="form-group">
+                        <label for="bulk-payment-date">Payment Date</label>
+                        <input type="date" id="bulk-payment-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Expenses to Pay</label>
+                        <div class="expense-checkbox-list" id="expense-checkbox-list">
+                            <!-- Checkboxes will be rendered by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="bulk-payment-notes">Notes (optional)</label>
+                        <input type="text" id="bulk-payment-notes" placeholder="e.g., January payments">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Pay Selected</button>
                 </form>
             </div>
         </div>
