@@ -699,7 +699,7 @@ function createExpenseCard(expense) {
                 ${paycheckBreakdown}
             </div>
         `;
-        if (totalSaved < expense.amount && !paidThisPayPeriod) {
+        if (totalSaved < expense.amount) {
             actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', null, true)">Add to Savings</button>`;
         }
     } else {
