@@ -5,19 +5,20 @@ function initTheme() {
     const savedTheme = localStorage.getItem('alex_expense_theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
+    // Default is dark (no class). Light mode adds 'light-mode' class.
     if (savedTheme === 'light' || (!savedTheme && !prefersDark)) {
-        document.body.classList.remove('dark');
+        document.body.classList.add('light-mode');
         updateThemeIcon(false);
     } else {
-        document.body.classList.add('dark');
+        document.body.classList.remove('light-mode');
         updateThemeIcon(true);
     }
 }
 
 function toggleTheme() {
-    const isDark = document.body.classList.toggle('dark');
-    localStorage.setItem('alex_expense_theme', isDark ? 'dark' : 'light');
-    updateThemeIcon(isDark);
+    const isLight = document.body.classList.toggle('light-mode');
+    localStorage.setItem('alex_expense_theme', isLight ? 'light' : 'dark');
+    updateThemeIcon(!isLight);
 }
 
 function updateThemeIcon(isDark) {
@@ -642,17 +643,17 @@ function createExpenseCard(expense) {
                              status === 'due-soon' ? 'expense-card-due-soon' :
                              status === 'overdue' ? 'expense-card-overdue' : 'expense-card-pending';
 
-    card.className = `group relative bg-white shadow-md hover:shadow-lg dark:bg-white/5 dark:shadow-none dark:backdrop-blur-xl rounded-2xl p-5 border-l-4 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-all duration-300 ${borderColorClass}`;
+    card.className = `expense-card group relative bg-white/5 backdrop-blur-xl rounded-2xl p-5 border-l-4 border border-white/10 hover:bg-white/10 transition-all duration-300 ${borderColorClass}`;
 
     let progressHTML = '';
     let actionButton = '';
 
     // Status badge colors
     const statusColors = {
-        'paid': 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400',
-        'due-soon': 'bg-yellow-100 text-yellow-600 dark:bg-yellow-500/20 dark:text-yellow-400',
-        'overdue': 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400',
-        'pending': 'bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-400'
+        'paid': 'bg-emerald-500/20 text-emerald-400',
+        'due-soon': 'bg-yellow-500/20 text-yellow-400',
+        'overdue': 'bg-red-500/20 text-red-400',
+        'pending': 'bg-violet-500/20 text-violet-400'
     };
 
     if (expense.type === 'loan') {
@@ -660,11 +661,11 @@ function createExpenseCard(expense) {
         const percentage = Math.round((paymentCount / expense.totalPayments) * 100);
         progressHTML = `
             <div class="mt-4">
-                <div class="flex justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
+                <div class="flex justify-between text-sm text-slate-400 mb-2">
                     <span>${paymentCount} of ${expense.totalPayments} payments</span>
                     <span>${percentage}%</span>
                 </div>
-                <div class="h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden progress-bar-bg">
                     <div class="h-full progress-gradient rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
                 </div>
             </div>
@@ -719,11 +720,11 @@ function createExpenseCard(expense) {
 
         progressHTML = `
             <div class="mt-4">
-                <div class="flex justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
+                <div class="flex justify-between text-sm text-slate-400 mb-2">
                     <span>$${formatCurrency(totalSaved)} of $${formatCurrency(expense.amount)}</span>
                     <span>${percentage}%</span>
                 </div>
-                <div class="h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                <div class="h-2 bg-white/10 rounded-full overflow-hidden progress-bar-bg">
                     <div class="h-full progress-gradient rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
                 </div>
                 ${paycheckBreakdown}
@@ -752,9 +753,9 @@ function createExpenseCard(expense) {
     if (expense.type === 'recurring') {
         const { credit, pastDue } = getCreditOrPastDue(expense);
         if (credit > 0) {
-            creditPastDueHTML = `<div class="text-xs text-emerald-600 dark:text-emerald-400">$${formatCurrency(credit)} Credit</div>`;
+            creditPastDueHTML = `<div class="text-xs text-emerald-400">$${formatCurrency(credit)} Credit</div>`;
         } else if (pastDue > 0) {
-            creditPastDueHTML = `<div class="text-xs text-red-600 dark:text-red-400">$${formatCurrency(pastDue)} Past Due!</div>`;
+            creditPastDueHTML = `<div class="text-xs text-red-400">$${formatCurrency(pastDue)} Past Due!</div>`;
         }
     }
 
@@ -762,15 +763,15 @@ function createExpenseCard(expense) {
         <div class="flex justify-between items-start mb-3">
             <div class="flex items-center gap-3">
                 <span class="text-2xl">${expense.icon}</span>
-                <span class="font-semibold text-slate-900 dark:text-white">${expense.name}</span>
+                <span class="font-semibold text-white">${expense.name}</span>
             </div>
             <div class="text-right">
-                <span class="text-lg font-bold text-violet-600 dark:text-violet-400">${amountText}</span>
+                <span class="text-lg font-bold text-violet-400">${amountText}</span>
                 ${creditPastDueHTML}
             </div>
         </div>
         <div class="flex items-center gap-3">
-            <span class="text-sm text-slate-500 dark:text-slate-400">${dueText}</span>
+            <span class="text-sm text-slate-400">${dueText}</span>
             <span class="px-2.5 py-1 text-xs font-medium rounded-full ${statusColors[status]}">${label}</span>
         </div>
         ${progressHTML}
@@ -785,7 +786,7 @@ function renderPaymentHistory() {
     paymentHistory.innerHTML = '';
 
     if (payments.length === 0) {
-        paymentHistory.innerHTML = '<li class="px-6 py-8 text-center text-slate-600 dark:text-slate-500">No payments recorded yet</li>';
+        paymentHistory.innerHTML = '<li class="px-6 py-8 text-center text-slate-500">No payments recorded yet</li>';
         return;
     }
 
@@ -795,7 +796,7 @@ function renderPaymentHistory() {
     recentPayments.forEach(payment => {
         const expense = EXPENSES.find(e => e.id === payment.category);
         const li = document.createElement('li');
-        li.className = 'flex items-center justify-between px-6 py-4 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors';
+        li.className = 'flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors';
 
         const date = parseLocalDate(payment.date);
         const formattedDate = date.toLocaleDateString('en-US', {
@@ -808,14 +809,14 @@ function renderPaymentHistory() {
             <div class="flex items-center gap-3">
                 <span class="text-xl">${expense ? expense.icon : ''}</span>
                 <div>
-                    <div class="font-medium text-slate-900 dark:text-white">${expense ? expense.name : payment.category}</div>
-                    <div class="text-sm text-slate-500 dark:text-slate-500">${formattedDate}${payment.notes ? ' · ' + payment.notes : ''}</div>
+                    <div class="font-medium text-white">${expense ? expense.name : payment.category}</div>
+                    <div class="text-sm text-slate-500">${formattedDate}${payment.notes ? ' · ' + payment.notes : ''}</div>
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <span class="font-semibold text-emerald-600 dark:text-emerald-400">$${formatCurrency(payment.amount)}</span>
-                <button class="p-2 hover:bg-red-100 dark:hover:bg-red-500/20 rounded-lg transition-colors group" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">
-                    <i data-lucide="trash-2" class="w-4 h-4 text-slate-400 group-hover:text-red-500 dark:group-hover:text-red-400"></i>
+                <span class="font-semibold text-emerald-400">$${formatCurrency(payment.amount)}</span>
+                <button class="p-2 hover:bg-red-500/20 rounded-lg transition-colors group" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">
+                    <i data-lucide="trash-2" class="w-4 h-4 text-slate-500 group-hover:text-red-400"></i>
                 </button>
             </div>
         `;
@@ -1097,17 +1098,17 @@ function openBulkPaymentModal() {
         }
 
         const checkItem = document.createElement('div');
-        checkItem.className = 'flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors';
+        checkItem.className = 'flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors';
         checkItem.innerHTML = `
-            <input type="checkbox" name="expense" value="${expense.id}" id="bulk-check-${expense.id}" class="w-5 h-5 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-white/5 text-violet-600 focus:ring-violet-500 focus:ring-offset-0">
+            <input type="checkbox" name="expense" value="${expense.id}" id="bulk-check-${expense.id}" class="w-5 h-5 rounded border-white/20 bg-white/5 text-violet-600 focus:ring-violet-500 focus:ring-offset-0">
             <label for="bulk-check-${expense.id}" class="flex items-center gap-2 flex-1 cursor-pointer">
                 <span class="text-lg">${expense.icon}</span>
-                <span class="text-slate-900 dark:text-white">${expense.name}</span>
-                ${isPastDue ? '<span class="text-xs text-red-500 dark:text-red-400">(Past Due)</span>' : ''}
+                <span class="text-white">${expense.name}</span>
+                ${isPastDue ? '<span class="text-xs text-red-400">(Past Due)</span>' : ''}
             </label>
             <div class="flex items-center gap-1">
-                <span class="text-violet-600 dark:text-violet-400">$</span>
-                <input type="number" step="0.01" min="0.01" value="${defaultAmount.toFixed(2)}" data-expense-id="${expense.id}" class="bulk-amount-input w-20 px-2 py-1 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg text-right text-violet-600 dark:text-violet-400 font-semibold focus:outline-none focus:border-violet-500">
+                <span class="text-violet-400">$</span>
+                <input type="number" step="0.01" min="0.01" value="${defaultAmount.toFixed(2)}" data-expense-id="${expense.id}" class="bulk-amount-input w-20 px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-right text-violet-400 font-semibold focus:outline-none focus:border-violet-500">
             </div>
         `;
         expenseCheckboxList.appendChild(checkItem);
@@ -1115,7 +1116,7 @@ function openBulkPaymentModal() {
 
     // Show message if no unpaid expenses
     if (expenseCheckboxList.children.length === 0) {
-        expenseCheckboxList.innerHTML = '<p class="text-center text-slate-600 dark:text-slate-500 py-4">All expenses are paid and current!</p>';
+        expenseCheckboxList.innerHTML = '<p class="text-center text-slate-500 py-4">All expenses are paid and current!</p>';
     }
 
     bulkPaymentModal.classList.remove('hidden');

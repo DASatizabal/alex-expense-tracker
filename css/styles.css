@@ -1,44 +1,166 @@
 /* Minimal custom styles - Tailwind handles most styling */
 
-/* CSS Variables for theme-adaptive styles */
-:root {
-    --scrollbar-bg: rgba(0, 0, 0, 0.05);
-    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
-    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
-    --calendar-icon-filter: invert(0.3);
+/* ============ LIGHT MODE OVERRIDES ============ */
+/* When body has .light-mode class, override dark theme colors */
+
+body.light-mode {
+    background-color: #f8fafc !important; /* slate-50 */
+    color: #1e293b !important; /* slate-800 */
 }
 
-.dark {
-    --scrollbar-bg: rgba(255, 255, 255, 0.05);
-    --scrollbar-thumb: rgba(255, 255, 255, 0.15);
-    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
-    --calendar-icon-filter: invert(0.7);
+/* Hide gradient background in light mode */
+body.light-mode #bg-gradient {
+    display: none;
 }
 
-/* Custom scrollbar */
+/* Cards in light mode */
+body.light-mode .card,
+body.light-mode .expense-card {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important; /* slate-200 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    backdrop-filter: none !important;
+}
+
+body.light-mode .card:hover,
+body.light-mode .expense-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Modal content in light mode */
+body.light-mode .modal-content {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+}
+
+/* Text colors in light mode */
+body.light-mode .text-white {
+    color: #1e293b !important; /* slate-800 */
+}
+
+body.light-mode .text-slate-100 {
+    color: #1e293b !important;
+}
+
+body.light-mode .text-slate-400 {
+    color: #64748b !important; /* slate-500 */
+}
+
+body.light-mode .text-slate-500 {
+    color: #64748b !important;
+}
+
+/* Input fields in light mode */
+body.light-mode input[type="text"],
+body.light-mode input[type="number"],
+body.light-mode input[type="password"],
+body.light-mode input[type="date"] {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important; /* slate-300 */
+    color: #1e293b !important;
+}
+
+body.light-mode input::placeholder {
+    color: #94a3b8 !important; /* slate-400 */
+}
+
+/* Checkbox container in light mode */
+body.light-mode #expense-checkbox-list {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* Loading overlay in light mode */
+body.light-mode #loading {
+    background-color: rgba(248, 250, 252, 0.8) !important;
+}
+
+body.light-mode #loading p {
+    color: #64748b !important;
+}
+
+/* Password modal backdrop in light mode */
+body.light-mode #password-modal > div:first-child {
+    background-color: rgba(248, 250, 252, 0.95) !important;
+}
+
+/* Header text - keep gradient visible */
+body.light-mode h1 {
+    background-image: linear-gradient(to right, #7c3aed, #06b6d4, #7c3aed) !important;
+}
+
+/* Progress bars in light mode */
+body.light-mode .progress-bar-bg {
+    background-color: #e2e8f0 !important;
+}
+
+/* Hover states in light mode */
+body.light-mode .hover\:bg-white\/10:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+body.light-mode .hover\:bg-white\/5:hover {
+    background-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Dividers in light mode */
+body.light-mode .divide-white\/5 > * + * {
+    border-color: #f1f5f9 !important; /* slate-100 */
+}
+
+body.light-mode .border-white\/10 {
+    border-color: #e2e8f0 !important;
+}
+
+/* Buttons hover in light mode */
+body.light-mode #theme-toggle:hover,
+body.light-mode #lock-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* ============ END LIGHT MODE OVERRIDES ============ */
+
+/* Custom scrollbar for dark theme */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--scrollbar-bg);
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--scrollbar-thumb-hover);
+    background: rgba(255, 255, 255, 0.25);
 }
 
-/* Date input styling */
+/* Light mode scrollbar */
+body.light-mode ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+body.light-mode ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+/* Date input styling for dark mode */
 input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: var(--calendar-icon-filter);
+    filter: invert(0.7);
     cursor: pointer;
+}
+
+body.light-mode input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.3);
 }
 
 /* Hide number input spinners */
@@ -120,4 +242,13 @@ input[type="password"]::-ms-clear {
     0%, 100% { transform: rotate(0deg); }
     25% { transform: rotate(-5deg); }
     75% { transform: rotate(5deg); }
+}
+
+/* Smooth transition for theme changes */
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.card, .expense-card, .modal-content, input {
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
 }
