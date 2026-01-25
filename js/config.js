@@ -1,6 +1,6 @@
 // Configuration for Alex's Expense Tracker
 
-const APP_VERSION = '2.5.2';
+const APP_VERSION = '2.6.0';
 
 const CONFIG = {
     // Encryption settings for password protection

@@ -1,6 +1,6 @@
 # Alex's Expense Tracker
 
-**Version 2.5.2** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
+**Version 2.6.0** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
 
 A modern, mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for cloud storage.
 
@@ -15,6 +15,7 @@ A modern, mobile-friendly web app for tracking recurring expenses, loan payments
 - **Payment History** - View and delete recent payments with dates and notes
 - **Cloud Sync** - Data stored in Google Sheets via Apps Script backend
 - **Offline Fallback** - Works with localStorage when offline
+- **Installable PWA** - Add to home screen, works offline with service worker caching
 - **Modern UI** - Dark/light glassmorphism theme with animations (Tailwind CSS + Lucide icons)
 - **Theme Toggle** - Switch between dark and light modes with system preference detection
 
@@ -42,6 +43,8 @@ See [SETUP.md](SETUP.md) for detailed instructions to connect to Google Sheets.
 ```
 alex-expense-tracker/
 ├── index.html              # Main HTML page (Tailwind + Lucide icons via CDN)
+├── manifest.json           # PWA manifest
+├── sw.js                   # Service worker for offline support
 ├── google-apps-script.js   # Backend script (copy to Google Apps Script)
 ├── css/
 │   └── styles.css          # Custom styling (animations, scrollbars)
@@ -49,6 +52,7 @@ alex-expense-tracker/
 │   ├── config.js           # Configuration (expenses, API URL, version)
 │   ├── sheets-api.js       # API layer (cloud + localStorage)
 │   └── app.js              # Main application logic
+├── icons/                  # PWA icons (192x192, 512x512, maskable)
 ├── README.md               # This file
 ├── SETUP.md                # Google Sheets setup guide
 ├── RESUME.md               # Project summary for quick reference

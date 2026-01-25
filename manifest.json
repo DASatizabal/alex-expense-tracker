@@ -1,0 +1,32 @@
+{
+  "name": "Alex's Expense Tracker",
+  "short_name": "Expenses",
+  "description": "Track recurring expenses, loan payments, and savings goals",
+  "start_url": "/alex-expense-tracker/",
+  "scope": "/alex-expense-tracker/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#0f172a",
+  "background_color": "#020617",
+  "categories": ["finance", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

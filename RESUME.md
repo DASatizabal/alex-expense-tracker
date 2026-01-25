@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.5.2**
+**Current Version: 2.6.0**
 
 ## Quick Links
 
@@ -27,6 +27,7 @@ Data syncs to Google Sheets so it persists across devices.
 ## Current State (January 2026)
 
 ### Working Features
+- **PWA support** - installable app with service worker for offline caching
 - **Dark/Light theme toggle** with system preference detection and localStorage persistence
 - **Password protection** with AES-GCM encryption (Web Crypto API)
 - **Auto-lock** after 5 minutes of inactivity (manual lock button available)
@@ -52,6 +53,8 @@ Data syncs to Google Sheets so it persists across devices.
 ```
 alex-expense-tracker/
 ├── index.html              # Main page
+├── manifest.json           # PWA manifest
+├── sw.js                   # Service worker for offline caching
 ├── google-apps-script.js   # Backend (copy to Google Apps Script)
 ├── css/styles.css          # Styling
 ├── js/
@@ -59,6 +62,7 @@ alex-expense-tracker/
 │   ├── encryption.js       # Web Crypto API (AES-GCM, PBKDF2) for passwords
 │   ├── sheets-api.js       # API layer (cloud + localStorage + session cache)
 │   └── app.js              # UI logic + password protection flow
+├── icons/                  # PWA icons (192, 512, maskable)
 ├── README.md               # Full documentation
 ├── SETUP.md                # Google Sheets setup guide
 ├── RESUME.md               # This file
@@ -71,7 +75,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.5.2'
+APP_VERSION: '2.6.0'
 ENCRYPTION: {
     ALGORITHM: 'AES-GCM',
     KEY_LENGTH: 256,
@@ -185,6 +189,7 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 
 | Version | Changes |
 |---------|---------|
+| v2.6.0 | **PWA support**: Installable app with manifest, service worker for offline caching, custom wallet icons |
 | v2.5.2 | Fix theme: Restore exact v2.4.1 dark styling, use CSS overrides for light mode |
 | v2.5.1 | Fix theme styling: Dark mode matches v2.4.1 glassmorphism, light mode uses traditional solid white cards |
 | v2.5.0 | **Theme toggle**: Dark/light mode switch with system preference detection and localStorage persistence |
