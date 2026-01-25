@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.4.0**
+**Current Version: 2.5.0**
 
 ## Quick Links
 
@@ -27,9 +27,10 @@ Data syncs to Google Sheets so it persists across devices.
 ## Current State (January 2026)
 
 ### Working Features
+- **Dark/Light theme toggle** with system preference detection and localStorage persistence
 - **Password protection** with AES-GCM encryption (Web Crypto API)
 - **Auto-lock** after 5 minutes of inactivity (manual lock button available)
-- Dark glassmorphism UI with Tailwind CSS and Lucide icons
+- Dark/light glassmorphism UI with Tailwind CSS and Lucide icons
 - Expense cards with status indicators (paid, due soon, overdue, pending)
 - Single payment modal with custom amounts and notes
 - Bulk payment modal to mark multiple expenses paid at once
@@ -70,7 +71,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.4.0'
+APP_VERSION: '2.5.0'
 ENCRYPTION: {
     ALGORITHM: 'AES-GCM',
     KEY_LENGTH: 256,
@@ -184,6 +185,8 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 
 | Version | Changes |
 |---------|---------|
+| v2.5.0 | **Theme toggle**: Dark/light mode switch with system preference detection and localStorage persistence |
+| v2.4.1 | Allow additional savings payments within same pay period |
 | v2.4.0 | **Password protection**: AES-GCM encryption, PBKDF2 key derivation, 5-min auto-lock, manual lock button, forgot password reset |
 | v2.3.6 | Hide number spinners, auto-select amount fields on focus |
 | v2.3.5 | Editable amounts in bulk payment modal with smart defaults |

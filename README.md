@@ -1,6 +1,6 @@
 # Alex's Expense Tracker
 
-**Version 2.4.1** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
+**Version 2.5.0** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
 
 A modern, mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for cloud storage.
 
@@ -15,7 +15,8 @@ A modern, mobile-friendly web app for tracking recurring expenses, loan payments
 - **Payment History** - View and delete recent payments with dates and notes
 - **Cloud Sync** - Data stored in Google Sheets via Apps Script backend
 - **Offline Fallback** - Works with localStorage when offline
-- **Modern UI** - Dark glassmorphism theme with animations (Tailwind CSS + Lucide icons)
+- **Modern UI** - Dark/light glassmorphism theme with animations (Tailwind CSS + Lucide icons)
+- **Theme Toggle** - Switch between dark and light modes with system preference detection
 
 ## Quick Start
 

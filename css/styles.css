@@ -1,28 +1,43 @@
 /* Minimal custom styles - Tailwind handles most styling */
 
-/* Custom scrollbar for dark theme */
+/* CSS Variables for theme-adaptive styles */
+:root {
+    --scrollbar-bg: rgba(0, 0, 0, 0.05);
+    --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+    --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+    --calendar-icon-filter: invert(0.3);
+}
+
+.dark {
+    --scrollbar-bg: rgba(255, 255, 255, 0.05);
+    --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+    --scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
+    --calendar-icon-filter: invert(0.7);
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--scrollbar-bg);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: var(--scrollbar-thumb-hover);
 }
 
-/* Date input styling for dark mode */
+/* Date input styling */
 input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(0.7);
+    filter: var(--calendar-icon-filter);
     cursor: pointer;
 }
 
