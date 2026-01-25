@@ -65,6 +65,72 @@ function getCurrencySymbol() {
     return CURRENCIES[currentCurrency]?.symbol || '$';
 }
 
+// Sync Status Indicator
+function initSyncIndicator() {
+    SheetsAPI.onSyncStatusChange(updateSyncIndicator);
+    // Set initial state based on config
+    if (CONFIG.USE_LOCAL_STORAGE) {
+        updateSyncIndicator('offline');
+    }
+}
+
+function updateSyncIndicator(status, lastSync) {
+    const indicator = document.getElementById('sync-indicator');
+    const statusText = document.getElementById('sync-status-text');
+    if (!indicator || !statusText) return;
+
+    // Remove all status classes
+    indicator.classList.remove('text-emerald-400', 'text-yellow-400', 'text-red-400', 'text-slate-500', 'animate-pulse');
+
+    let icon, text, colorClass;
+    switch (status) {
+        case 'synced':
+            icon = 'cloud-check';
+            text = 'Synced';
+            colorClass = 'text-emerald-400';
+            break;
+        case 'syncing':
+            icon = 'cloud-upload';
+            text = 'Syncing...';
+            colorClass = 'text-yellow-400';
+            indicator.classList.add('animate-pulse');
+            break;
+        case 'offline':
+            icon = 'cloud-off';
+            text = 'Offline';
+            colorClass = 'text-slate-500';
+            break;
+        case 'error':
+            icon = 'cloud-alert';
+            text = 'Sync Error';
+            colorClass = 'text-red-400';
+            break;
+        default:
+            icon = 'cloud';
+            text = 'Unknown';
+            colorClass = 'text-slate-500';
+    }
+
+    indicator.classList.add(colorClass);
+    indicator.innerHTML = `
+        <i data-lucide="${icon}" class="w-3 h-3"></i>
+        <span id="sync-status-text">${text}</span>
+    `;
+
+    if (lastSync && status === 'synced') {
+        indicator.title = `Last synced: ${lastSync.toLocaleTimeString()}`;
+    } else {
+        indicator.title = text;
+    }
+
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+}
+
+// Edit Payment State
+let editingPaymentId = null;
+
 let payments = [];
 
 // DOM Elements
@@ -853,8 +919,11 @@ function renderPaymentHistory() {
                     <div class="text-sm text-slate-500">${formattedDate}${payment.notes ? ' · ' + payment.notes : ''}</div>
                 </div>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
                 <span class="font-semibold text-emerald-400">${getCurrencySymbol()}${formatCurrency(payment.amount)}</span>
+                <button class="p-2 hover:bg-violet-500/20 rounded-lg transition-colors group" onclick="handleEditPayment('${payment.id}')" title="Edit payment">
+                    <i data-lucide="pencil" class="w-4 h-4 text-slate-500 group-hover:text-violet-400"></i>
+                </button>
                 <button class="p-2 hover:bg-red-500/20 rounded-lg transition-colors group" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">
                     <i data-lucide="trash-2" class="w-4 h-4 text-slate-500 group-hover:text-red-400"></i>
                 </button>
@@ -1026,6 +1095,32 @@ function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
 function closePaymentModal() {
     paymentModal.classList.add('hidden');
     paymentModal.classList.remove('flex');
+    editingPaymentId = null; // Reset edit mode
+}
+
+// Handle editing a payment
+function handleEditPayment(paymentId) {
+    const payment = payments.find(p => p.id === paymentId);
+    if (!payment) return;
+
+    const expense = EXPENSES.find(e => e.id === payment.category);
+
+    editingPaymentId = paymentId;
+
+    document.getElementById('modal-title').textContent = expense
+        ? `Edit ${expense.name} Payment`
+        : 'Edit Payment';
+
+    document.getElementById('payment-category').value = payment.category;
+    document.getElementById('payment-amount').value = payment.amount;
+    document.getElementById('payment-date').value = payment.date;
+    document.getElementById('payment-notes').value = payment.notes || '';
+
+    // Remove max limit when editing
+    document.getElementById('payment-amount').removeAttribute('max');
+
+    paymentModal.classList.remove('hidden');
+    paymentModal.classList.add('flex');
 }
 
 // Handle payment form submission
@@ -1044,9 +1139,9 @@ async function handlePaymentSubmit(e) {
         return;
     }
 
-    // Validate goal payments don't exceed remaining balance
+    // Validate goal payments don't exceed remaining balance (only for new payments)
     const expense = EXPENSES.find(e => e.id === payment.category);
-    if (expense && expense.type === 'goal') {
+    if (!editingPaymentId && expense && expense.type === 'goal') {
         const totalSaved = getTotalPaymentsForCategory(expense.id);
         const remainingBalance = expense.amount - totalSaved;
         if (payment.amount > remainingBalance) {
@@ -1058,7 +1153,16 @@ async function handlePaymentSubmit(e) {
     showLoading(true);
 
     try {
-        await SheetsAPI.savePayment(payment);
+        if (editingPaymentId) {
+            // Update existing payment
+            await SheetsAPI.updatePayment(editingPaymentId, payment);
+            showToast('Payment updated successfully!', 'success');
+        } else {
+            // Save new payment
+            await SheetsAPI.savePayment(payment);
+            showToast('Payment saved successfully!', 'success');
+        }
+
         payments = await SheetsAPI.getPayments();
 
         renderExpenseCards();
@@ -1066,7 +1170,6 @@ async function handlePaymentSubmit(e) {
         updateSummary();
 
         closePaymentModal();
-        showToast('Payment saved successfully!', 'success');
     } catch (error) {
         console.error('Error saving payment:', error);
         showToast('Failed to save payment', 'error');
@@ -1250,6 +1353,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add theme toggle listener
     document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+
+    // Initialize sync status indicator
+    initSyncIndicator();
+
+    // Set up export CSV button
+    document.getElementById('export-csv-btn')?.addEventListener('click', () => {
+        SheetsAPI.exportToCSV();
+        showToast('Payments exported to CSV', 'success');
+    });
 
     // Initialize bulk payment DOM elements
     bulkPaymentBtn = document.getElementById('bulk-payment-btn');

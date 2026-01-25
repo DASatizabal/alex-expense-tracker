@@ -4,6 +4,31 @@ const SheetsAPI = {
     // Session cache for decrypted data (only in memory, never in localStorage)
     _sessionCache: null,
     _sessionPassword: null,
+
+    // Sync status: 'synced', 'offline', 'syncing', 'error'
+    _syncStatus: 'synced',
+    _lastSyncTime: null,
+    _syncListeners: [],
+
+    // Subscribe to sync status changes
+    onSyncStatusChange(callback) {
+        this._syncListeners.push(callback);
+    },
+
+    // Update sync status and notify listeners
+    _setSyncStatus(status) {
+        this._syncStatus = status;
+        if (status === 'synced') {
+            this._lastSyncTime = new Date();
+        }
+        this._syncListeners.forEach(cb => cb(status, this._lastSyncTime));
+    },
+
+    // Get current sync status
+    getSyncStatus() {
+        return { status: this._syncStatus, lastSync: this._lastSyncTime };
+    },
+
     // Check if Apps Script is configured
     isConfigured() {
         return CONFIG.APPS_SCRIPT_URL &&
@@ -29,6 +54,7 @@ const SheetsAPI = {
     // ============ Google Apps Script Methods ============
 
     async getPaymentsFromSheets() {
+        this._setSyncStatus('syncing');
         try {
             const response = await fetch(CONFIG.APPS_SCRIPT_URL);
 
@@ -42,15 +68,18 @@ const SheetsAPI = {
                 throw new Error(data.error);
             }
 
+            this._setSyncStatus('synced');
             return data.payments || [];
         } catch (error) {
             console.error('Error fetching from Apps Script:', error);
+            this._setSyncStatus('offline');
             // Fallback to localStorage
             return this.getPaymentsFromLocalStorage();
         }
     },
 
     async savePaymentToSheets(payment) {
+        this._setSyncStatus('syncing');
         try {
             // Add unique ID
             payment.id = this.generateId();
@@ -75,9 +104,11 @@ const SheetsAPI = {
             // Also save to localStorage for offline access
             this.addToLocalStorage(payment);
 
+            this._setSyncStatus('synced');
             return data.payment;
         } catch (error) {
             console.error('Error saving to Apps Script:', error);
+            this._setSyncStatus('offline');
             // Fallback to localStorage
             return this.savePaymentToLocalStorage(payment);
         }
@@ -206,6 +237,58 @@ const SheetsAPI = {
 
         // Encrypt and save to localStorage
         await this._saveEncryptedPayments(filtered);
+    },
+
+    // Update an existing payment
+    async updatePayment(paymentId, updates) {
+        if (this.isConfigured() && !CONFIG.USE_LOCAL_STORAGE) {
+            await this.updatePaymentInSheets(paymentId, updates);
+        }
+        // Always update localStorage too
+        const payments = this.getPaymentsFromLocalStorage();
+        const index = payments.findIndex(p => p.id === paymentId);
+        if (index !== -1) {
+            payments[index] = { ...payments[index], ...updates };
+            payments.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        // Update session cache
+        this._sessionCache = payments;
+
+        // Encrypt and save to localStorage
+        await this._saveEncryptedPayments(payments);
+        return payments[index];
+    },
+
+    async updatePaymentInSheets(paymentId, updates) {
+        this._setSyncStatus('syncing');
+        try {
+            const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: JSON.stringify({
+                    action: 'update',
+                    id: paymentId,
+                    updates: updates
+                }),
+                redirect: 'follow'
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            this._setSyncStatus('synced');
+            return data.success;
+        } catch (error) {
+            console.error('Error updating in Apps Script:', error);
+            this._setSyncStatus('offline');
+            // Continue with localStorage update
+        }
     },
 
     // Internal: Save encrypted payments to localStorage

@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.7.0**
+**Current Version: 2.8.0**
 
 ## Quick Links
 
@@ -27,6 +27,9 @@ Data syncs to Google Sheets so it persists across devices.
 ## Current State (January 2026)
 
 ### Working Features
+- **Sync status indicator** - shows synced/syncing/offline status in real-time
+- **Edit payments** - modify existing payments (amount, date, notes)
+- **CSV export** - export payment history to CSV file
 - **Currency selector** - 10 currencies (USD, EUR, GBP, etc.) with localStorage persistence
 - **PWA support** - installable app with service worker for offline caching
 - **Dark/Light theme toggle** with system preference detection and localStorage persistence
@@ -76,7 +79,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.7.0'
+APP_VERSION: '2.8.0'
 ENCRYPTION: {
     ALGORITHM: 'AES-GCM',
     KEY_LENGTH: 256,
@@ -190,6 +193,7 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 
 | Version | Changes |
 |---------|---------|
+| v2.8.0 | **Offline indicator, Edit payment, CSV export**: Sync status indicator, edit existing payments, export to CSV button |
 | v2.7.0 | **Currency selector**: 10 currencies (USD, EUR, GBP, CAD, AUD, MXN, JPY, INR, BRL, CHF) with localStorage persistence |
 | v2.6.0 | **PWA support**: Installable app with manifest, service worker for offline caching, custom wallet icons |
 | v2.5.2 | Fix theme: Restore exact v2.4.1 dark styling, use CSS overrides for light mode |
@@ -237,3 +241,4 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 8. Added password protection (v2.4.0) with Web Crypto API encryption
 9. Added PWA support (v2.6.0) with service worker and custom icons
 10. Added currency selector (v2.7.0) with 10 currencies
+11. Added sync indicator, edit payment, CSV export (v2.8.0)

@@ -24,7 +24,7 @@ Transform this single-user expense tracker into a **multi-tenant personal financ
 - [x] Currency selector — **DONE v2.7.0** - 10 currencies with localStorage persistence
 - [ ] Language i18n skeleton — prep for future localization
 - [x] PWA manifest — **DONE v2.6.0** - installable on home screen with service worker
-- [ ] Offline indicator — show sync status clearly
+- [x] Offline indicator — **DONE v2.8.0** - sync status indicator (synced/syncing/offline)
 
 ---
 
@@ -576,7 +576,9 @@ NOW (Week 1-2)
 ├── [x] Dark/light theme toggle (v2.5.2)
 ├── [x] PWA manifest (v2.6.0)
 ├── [x] Currency selector (v2.7.0)
-└── [ ] Basic export to CSV
+├── [x] Offline indicator (v2.8.0)
+├── [x] Edit payment (v2.8.0)
+└── [x] Basic export to CSV (v2.8.0)
 
 SHORT-TERM (Month 1-2)
 ├── [ ] Google OAuth
