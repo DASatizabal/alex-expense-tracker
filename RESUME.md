@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.6.0**
+**Current Version: 2.7.0**
 
 ## Quick Links
 
@@ -27,6 +27,7 @@ Data syncs to Google Sheets so it persists across devices.
 ## Current State (January 2026)
 
 ### Working Features
+- **Currency selector** - 10 currencies (USD, EUR, GBP, etc.) with localStorage persistence
 - **PWA support** - installable app with service worker for offline caching
 - **Dark/Light theme toggle** with system preference detection and localStorage persistence
 - **Password protection** with AES-GCM encryption (Web Crypto API)
@@ -75,7 +76,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.6.0'
+APP_VERSION: '2.7.0'
 ENCRYPTION: {
     ALGORITHM: 'AES-GCM',
     KEY_LENGTH: 256,
@@ -189,6 +190,7 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 
 | Version | Changes |
 |---------|---------|
+| v2.7.0 | **Currency selector**: 10 currencies (USD, EUR, GBP, CAD, AUD, MXN, JPY, INR, BRL, CHF) with localStorage persistence |
 | v2.6.0 | **PWA support**: Installable app with manifest, service worker for offline caching, custom wallet icons |
 | v2.5.2 | Fix theme: Restore exact v2.4.1 dark styling, use CSS overrides for light mode |
 | v2.5.1 | Fix theme styling: Dark mode matches v2.4.1 glassmorphism, light mode uses traditional solid white cards |
@@ -233,3 +235,5 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 6. Major UI modernization (v2.0.0) with Tailwind + glassmorphism
 7. Settled on dark-only theme after testing light/dark toggle
 8. Added password protection (v2.4.0) with Web Crypto API encryption
+9. Added PWA support (v2.6.0) with service worker and custom icons
+10. Added currency selector (v2.7.0) with 10 currencies

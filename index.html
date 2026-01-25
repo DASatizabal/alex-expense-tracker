@@ -67,8 +67,11 @@
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/10 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- Version Tag, Theme Toggle & Lock Button -->
-    <div class="fixed top-4 right-4 z-50 flex items-center gap-3">
+    <!-- Version Tag, Theme Toggle, Currency & Lock Button -->
+    <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <select id="currency-selector" title="Select currency" class="px-2 py-1.5 text-xs bg-white/5 border border-white/10 rounded-lg text-slate-400 hover:text-violet-400 hover:border-violet-500/50 focus:outline-none focus:border-violet-500 cursor-pointer transition-colors">
+            <!-- Options populated by JavaScript -->
+        </select>
         <button class="p-2 hover:bg-white/10 rounded-lg transition-colors group" id="theme-toggle" title="Toggle theme">
             <i data-lucide="moon" class="w-4 h-4 text-slate-500 group-hover:text-violet-400"></i>
         </button>
@@ -151,7 +154,7 @@
                 <form id="payment-form" class="p-6 space-y-4">
                     <input type="hidden" id="payment-category">
                     <div>
-                        <label for="payment-amount" class="block text-sm font-medium text-slate-400 mb-2">Amount ($)</label>
+                        <label for="payment-amount" class="block text-sm font-medium text-slate-400 mb-2">Amount</label>
                         <input type="number" id="payment-amount" step="0.01" required
                             class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>

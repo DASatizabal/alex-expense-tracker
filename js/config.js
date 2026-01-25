@@ -1,6 +1,22 @@
 // Configuration for Alex's Expense Tracker
 
-const APP_VERSION = '2.6.0';
+const APP_VERSION = '2.7.0';
+
+// Supported currencies
+const CURRENCIES = {
+    USD: { symbol: '$', code: 'USD', name: 'US Dollar', locale: 'en-US' },
+    EUR: { symbol: '€', code: 'EUR', name: 'Euro', locale: 'de-DE' },
+    GBP: { symbol: '£', code: 'GBP', name: 'British Pound', locale: 'en-GB' },
+    CAD: { symbol: '$', code: 'CAD', name: 'Canadian Dollar', locale: 'en-CA' },
+    AUD: { symbol: '$', code: 'AUD', name: 'Australian Dollar', locale: 'en-AU' },
+    MXN: { symbol: '$', code: 'MXN', name: 'Mexican Peso', locale: 'es-MX' },
+    JPY: { symbol: '¥', code: 'JPY', name: 'Japanese Yen', locale: 'ja-JP' },
+    INR: { symbol: '₹', code: 'INR', name: 'Indian Rupee', locale: 'en-IN' },
+    BRL: { symbol: 'R$', code: 'BRL', name: 'Brazilian Real', locale: 'pt-BR' },
+    CHF: { symbol: 'CHF', code: 'CHF', name: 'Swiss Franc', locale: 'de-CH' }
+};
+
+const DEFAULT_CURRENCY = 'USD';
 
 const CONFIG = {
     // Encryption settings for password protection

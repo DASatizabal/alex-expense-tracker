@@ -31,6 +31,40 @@ function updateThemeIcon(isDark) {
     }
 }
 
+// Currency Management
+let currentCurrency = DEFAULT_CURRENCY;
+
+function initCurrency() {
+    const selector = document.getElementById('currency-selector');
+    if (!selector) return;
+
+    // Populate dropdown
+    selector.innerHTML = Object.entries(CURRENCIES).map(([code, currency]) =>
+        `<option value="${code}">${currency.symbol} ${code}</option>`
+    ).join('');
+
+    // Load saved preference
+    const savedCurrency = localStorage.getItem('alex_expense_currency');
+    if (savedCurrency && CURRENCIES[savedCurrency]) {
+        currentCurrency = savedCurrency;
+    }
+    selector.value = currentCurrency;
+
+    // Handle changes
+    selector.addEventListener('change', (e) => {
+        currentCurrency = e.target.value;
+        localStorage.setItem('alex_expense_currency', currentCurrency);
+        renderExpenses();
+        renderPaymentHistory();
+        updateSummary();
+        showToast(`Currency changed to ${CURRENCIES[currentCurrency].name}`, 'info');
+    });
+}
+
+function getCurrencySymbol() {
+    return CURRENCIES[currentCurrency]?.symbol || '$';
+}
+
 let payments = [];
 
 // DOM Elements
@@ -280,7 +314,7 @@ function lockApp() {
     // Clear UI
     expensesContainer.innerHTML = '';
     paymentHistory.innerHTML = '';
-    monthlyTotalEl.textContent = '$0';
+    monthlyTotalEl.textContent = `${getCurrencySymbol()}0`;
     nextDueEl.textContent = '-';
 
     // Show password modal
@@ -420,13 +454,19 @@ function getTodayDateString() {
 }
 
 // Format currency with comma separators (hide .00 cents)
-function formatCurrency(amount) {
-    // Check if amount has cents
+function formatCurrency(amount, includeSymbol = false) {
+    const currency = CURRENCIES[currentCurrency] || CURRENCIES.USD;
     const hasCents = amount % 1 !== 0;
-    return amount.toLocaleString('en-US', {
-        minimumFractionDigits: hasCents ? 2 : 0,
-        maximumFractionDigits: hasCents ? 2 : 0
+
+    // JPY doesn't use decimal places
+    const noDecimals = currentCurrency === 'JPY';
+
+    const formatted = amount.toLocaleString(currency.locale, {
+        minimumFractionDigits: noDecimals ? 0 : (hasCents ? 2 : 0),
+        maximumFractionDigits: noDecimals ? 0 : (hasCents ? 2 : 0)
     });
+
+    return includeSymbol ? `${currency.symbol}${formatted}` : formatted;
 }
 
 // Check if a payment exists for an expense in a given month
@@ -713,15 +753,15 @@ function createExpenseCard(expense) {
 
         let paycheckBreakdown = '';
         if (remainingBalance > 0 && paychecksRemaining > 0) {
-            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${paychecksRemaining} paychecks left · $${formatCurrency(perPaycheck)}/paycheck</div>`;
+            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${paychecksRemaining} paychecks left · ${getCurrencySymbol()}${formatCurrency(perPaycheck)}/paycheck</div>`;
         } else if (remainingBalance > 0 && paychecksRemaining === 0 && paidThisPayPeriod) {
-            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">$${formatCurrency(remainingBalance)} remaining</div>`;
+            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${getCurrencySymbol()}${formatCurrency(remainingBalance)} remaining</div>`;
         }
 
         progressHTML = `
             <div class="mt-4">
                 <div class="flex justify-between text-sm text-slate-400 mb-2">
-                    <span>$${formatCurrency(totalSaved)} of $${formatCurrency(expense.amount)}</span>
+                    <span>${getCurrencySymbol()}${formatCurrency(totalSaved)} of ${getCurrencySymbol()}${formatCurrency(expense.amount)}</span>
                     <span>${percentage}%</span>
                 </div>
                 <div class="h-2 bg-white/10 rounded-full overflow-hidden progress-bar-bg">
@@ -745,17 +785,17 @@ function createExpenseCard(expense) {
         : `Due: ${expense.dueDay}${getOrdinalSuffix(expense.dueDay)} of month`;
 
     const amountText = expense.type === 'goal'
-        ? `$${formatCurrency(expense.amount)} total`
-        : `$${formatCurrency(expense.amount)}/month`;
+        ? `${getCurrencySymbol()}${formatCurrency(expense.amount)} total`
+        : `${getCurrencySymbol()}${formatCurrency(expense.amount)}/month`;
 
     // Calculate credit or past due for recurring expenses
     let creditPastDueHTML = '';
     if (expense.type === 'recurring') {
         const { credit, pastDue } = getCreditOrPastDue(expense);
         if (credit > 0) {
-            creditPastDueHTML = `<div class="text-xs text-emerald-400">$${formatCurrency(credit)} Credit</div>`;
+            creditPastDueHTML = `<div class="text-xs text-emerald-400">${getCurrencySymbol()}${formatCurrency(credit)} Credit</div>`;
         } else if (pastDue > 0) {
-            creditPastDueHTML = `<div class="text-xs text-red-400">$${formatCurrency(pastDue)} Past Due!</div>`;
+            creditPastDueHTML = `<div class="text-xs text-red-400">${getCurrencySymbol()}${formatCurrency(pastDue)} Past Due!</div>`;
         }
     }
 
@@ -814,7 +854,7 @@ function renderPaymentHistory() {
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <span class="font-semibold text-emerald-400">$${formatCurrency(payment.amount)}</span>
+                <span class="font-semibold text-emerald-400">${getCurrencySymbol()}${formatCurrency(payment.amount)}</span>
                 <button class="p-2 hover:bg-red-500/20 rounded-lg transition-colors group" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">
                     <i data-lucide="trash-2" class="w-4 h-4 text-slate-500 group-hover:text-red-400"></i>
                 </button>
@@ -859,7 +899,7 @@ function updateSummary() {
         }
     });
 
-    monthlyTotalEl.textContent = `$${formatCurrency(remainingAmount)}`;
+    monthlyTotalEl.textContent = `${getCurrencySymbol()}${formatCurrency(remainingAmount)}`;
 
     // Find next due expense
     let nextDue = null;
@@ -1010,7 +1050,7 @@ async function handlePaymentSubmit(e) {
         const totalSaved = getTotalPaymentsForCategory(expense.id);
         const remainingBalance = expense.amount - totalSaved;
         if (payment.amount > remainingBalance) {
-            showToast(`Amount exceeds remaining balance ($${formatCurrency(remainingBalance)})`, 'error');
+            showToast(`Amount exceeds remaining balance (${getCurrencySymbol()}${formatCurrency(remainingBalance)})`, 'error');
             return;
         }
     }
@@ -1107,7 +1147,7 @@ function openBulkPaymentModal() {
                 ${isPastDue ? '<span class="text-xs text-red-400">(Past Due)</span>' : ''}
             </label>
             <div class="flex items-center gap-1">
-                <span class="text-violet-400">$</span>
+                <span class="text-violet-400">${getCurrencySymbol()}</span>
                 <input type="number" step="0.01" min="0.01" value="${defaultAmount.toFixed(2)}" data-expense-id="${expense.id}" class="bulk-amount-input w-20 px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-right text-violet-400 font-semibold focus:outline-none focus:border-violet-500">
             </div>
         `;
@@ -1204,6 +1244,9 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize theme first (before any UI shows)
     initTheme();
+
+    // Initialize currency selector
+    initCurrency();
 
     // Add theme toggle listener
     document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
