@@ -20,7 +20,7 @@ Transform this single-user expense tracker into a **multi-tenant personal financ
 
 ### User Experience Quick Wins
 
-- [ ] Dark/Light theme toggle — some users prefer light mode
+- [x] Dark/Light theme toggle — ✅ **DONE v2.5.2** - CSS override approach, exact v2.4.1 dark + traditional light
 - [ ] Currency selector — USD, EUR, GBP, etc.
 - [ ] Language i18n skeleton — prep for future localization
 - [ ] PWA manifest — installable on home screen immediately
@@ -573,8 +573,8 @@ Send: More urgent reminder + partner notification
 ```
 NOW (Week 1-2)
 ├── [x] PIN/password protection (v2.4.0)
+├── [x] Dark/light theme toggle (v2.5.2)
 ├── [ ] PWA manifest (installable)
-├── [ ] Dark/light theme toggle
 └── [ ] Basic export to CSV
 
 SHORT-TERM (Month 1-2)
