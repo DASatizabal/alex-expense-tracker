@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.5.0**
+**Current Version: 2.5.1**
 
 ## Quick Links
 
@@ -71,7 +71,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.5.0'
+APP_VERSION: '2.5.1'
 ENCRYPTION: {
     ALGORITHM: 'AES-GCM',
     KEY_LENGTH: 256,
@@ -185,6 +185,7 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 
 | Version | Changes |
 |---------|---------|
+| v2.5.1 | Fix theme styling: Dark mode matches v2.4.1 glassmorphism, light mode uses traditional solid white cards |
 | v2.5.0 | **Theme toggle**: Dark/light mode switch with system preference detection and localStorage persistence |
 | v2.4.1 | Allow additional savings payments within same pay period |
 | v2.4.0 | **Password protection**: AES-GCM encryption, PBKDF2 key derivation, 5-min auto-lock, manual lock button, forgot password reset |
