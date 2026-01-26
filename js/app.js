@@ -34,6 +34,36 @@ function updateThemeIcon(isDark) {
 // Currency Management
 let currentCurrency = DEFAULT_CURRENCY;
 
+// Language Management
+function initLanguage() {
+    const selector = document.getElementById('language-selector');
+    if (!selector) return;
+
+    // Initialize I18n
+    I18n.init();
+
+    // Populate dropdown
+    selector.innerHTML = I18n.getAvailableLanguages().map(lang =>
+        `<option value="${lang.code}">${lang.nativeName}</option>`
+    ).join('');
+
+    selector.value = I18n.currentLanguage;
+
+    // Handle changes
+    selector.addEventListener('change', (e) => {
+        const newLang = e.target.value;
+        I18n.setLanguage(newLang);
+        // Re-render dynamic content
+        renderExpenseCards();
+        renderPaymentHistory();
+        updateSummary();
+        showToast(I18n.t('toast.languageChanged', { language: I18n.LANGUAGES[newLang].name }), 'info');
+    });
+
+    // Translate static page elements
+    I18n.translatePage();
+}
+
 function initCurrency() {
     const selector = document.getElementById('currency-selector');
     if (!selector) return;
@@ -54,10 +84,10 @@ function initCurrency() {
     selector.addEventListener('change', (e) => {
         currentCurrency = e.target.value;
         localStorage.setItem('alex_expense_currency', currentCurrency);
-        renderExpenses();
+        renderExpenseCards();
         renderPaymentHistory();
         updateSummary();
-        showToast(`Currency changed to ${CURRENCIES[currentCurrency].name}`, 'info');
+        showToast(I18n.t('toast.currencyChanged', { currency: CURRENCIES[currentCurrency].name }), 'info');
     });
 }
 
@@ -86,28 +116,28 @@ function updateSyncIndicator(status, lastSync) {
     switch (status) {
         case 'synced':
             icon = 'cloud-check';
-            text = 'Synced';
+            text = I18n.t('sync.synced');
             colorClass = 'text-emerald-400';
             break;
         case 'syncing':
             icon = 'cloud-upload';
-            text = 'Syncing...';
+            text = I18n.t('sync.syncing');
             colorClass = 'text-yellow-400';
             indicator.classList.add('animate-pulse');
             break;
         case 'offline':
             icon = 'cloud-off';
-            text = 'Offline';
+            text = I18n.t('sync.offline');
             colorClass = 'text-slate-500';
             break;
         case 'error':
             icon = 'cloud-alert';
-            text = 'Sync Error';
+            text = I18n.t('sync.error');
             colorClass = 'text-red-400';
             break;
         default:
             icon = 'cloud';
-            text = 'Unknown';
+            text = I18n.t('sync.unknown');
             colorClass = 'text-slate-500';
     }
 
@@ -118,7 +148,7 @@ function updateSyncIndicator(status, lastSync) {
     `;
 
     if (lastSync && status === 'synced') {
-        indicator.title = `Last synced: ${lastSync.toLocaleTimeString()}`;
+        indicator.title = I18n.t('sync.lastSynced', { time: lastSync.toLocaleTimeString() });
     } else {
         indicator.title = text;
     }
@@ -217,15 +247,15 @@ function showPasswordModal(mode) {
     forgotPasswordContainer.classList.add('hidden');
 
     if (mode === 'setup') {
-        passwordModalTitle.textContent = 'Create Password';
-        passwordModalSubtitle.textContent = 'Set a password to protect your data';
-        passwordSubmitBtn.textContent = 'Create Password';
+        passwordModalTitle.textContent = I18n.t('modal.createPassword');
+        passwordModalSubtitle.textContent = I18n.t('modal.createPasswordSubtitle');
+        passwordSubmitBtn.textContent = I18n.t('button.createPassword');
         confirmPasswordGroup.classList.remove('hidden');
         confirmPasswordInput.required = true;
     } else {
-        passwordModalTitle.textContent = 'Unlock App';
-        passwordModalSubtitle.textContent = 'Enter your password to continue';
-        passwordSubmitBtn.textContent = 'Unlock';
+        passwordModalTitle.textContent = I18n.t('modal.unlockApp');
+        passwordModalSubtitle.textContent = I18n.t('modal.unlockSubtitle');
+        passwordSubmitBtn.textContent = I18n.t('button.unlock');
         confirmPasswordGroup.classList.add('hidden');
         confirmPasswordInput.required = false;
     }
@@ -263,12 +293,12 @@ async function handleSetup(password) {
 
     // Validate password
     if (password.length < 4) {
-        showToast('Password must be at least 4 characters', 'error');
+        showToast(I18n.t('toast.passwordTooShort'), 'error');
         return;
     }
 
     if (password !== confirmPassword) {
-        showToast('Passwords do not match', 'error');
+        showToast(I18n.t('toast.passwordsMismatch'), 'error');
         return;
     }
 
@@ -297,10 +327,10 @@ async function handleSetup(password) {
         startInactivityTracking();
         await init();
 
-        showToast('Password created successfully!', 'success');
+        showToast(I18n.t('toast.passwordCreated'), 'success');
     } catch (error) {
         console.error('Setup error:', error);
-        showToast('Failed to set up password', 'error');
+        showToast(I18n.t('toast.setupFailed'), 'error');
     } finally {
         showLoading(false);
     }
@@ -314,7 +344,7 @@ async function handleUnlock(password) {
         // Verify password
         const credentials = Encryption.getStoredCredentials();
         if (!credentials) {
-            showToast('No password found', 'error');
+            showToast(I18n.t('toast.noPasswordFound'), 'error');
             showLoading(false);
             return;
         }
@@ -330,7 +360,7 @@ async function handleUnlock(password) {
                 forgotPasswordContainer.classList.remove('hidden');
             }
 
-            showToast('Incorrect password', 'error');
+            showToast(I18n.t('toast.incorrectPassword'), 'error');
             passwordInput.value = '';
             passwordInput.focus();
             return;
@@ -351,7 +381,7 @@ async function handleUnlock(password) {
         startInactivityTracking();
         await init();
 
-        showToast('Welcome back!', 'success');
+        showToast(I18n.t('toast.welcomeBack'), 'success');
     } catch (error) {
         console.error('Unlock error:', error);
         wrongPasswordCount++;
@@ -360,7 +390,7 @@ async function handleUnlock(password) {
             forgotPasswordContainer.classList.remove('hidden');
         }
 
-        showToast('Incorrect password', 'error');
+        showToast(I18n.t('toast.incorrectPassword'), 'error');
         passwordInput.value = '';
         passwordInput.focus();
     } finally {
@@ -398,7 +428,7 @@ function resetApp() {
 
     // Show setup modal
     showPasswordModal('setup');
-    showToast('Data cleared. Create a new password.', 'info');
+    showToast(I18n.t('toast.dataCleared'), 'info');
 }
 
 // Show reset confirmation modal
@@ -481,7 +511,7 @@ async function init() {
         initLucideIcons();
     } catch (error) {
         console.error('Error initializing app:', error);
-        showToast('Failed to load data', 'error');
+        showToast(I18n.t('toast.loadFailed'), 'error');
     } finally {
         showLoading(false);
     }
@@ -630,40 +660,40 @@ function getExpenseStatus(expense) {
         // For goals, check progress
         const totalSaved = getTotalPaymentsForCategory(expense.id);
         if (totalSaved >= expense.amount) {
-            return { status: 'paid', label: 'Goal Reached!' };
+            return { status: 'paid', label: I18n.t('status.goalReached') };
         }
         // Check if paid this pay period
         if (hasPaymentForPayPeriod(expense.id)) {
-            return { status: 'paid', label: 'Paid this payperiod' };
+            return { status: 'paid', label: I18n.t('status.paidPayperiod') };
         }
         const daysUntilDue = Math.ceil((expense.dueDate - today) / (1000 * 60 * 60 * 24));
         if (daysUntilDue < 0) {
-            return { status: 'overdue', label: 'Past Due' };
+            return { status: 'overdue', label: I18n.t('status.pastDue') };
         }
         if (daysUntilDue <= 30) {
-            return { status: 'due-soon', label: `${daysUntilDue} days left` };
+            return { status: 'due-soon', label: I18n.plural('status.daysLeft', daysUntilDue) };
         }
-        return { status: 'pending', label: `${daysUntilDue} days left` };
+        return { status: 'pending', label: I18n.plural('status.daysLeft', daysUntilDue) };
     }
 
     if (expense.type === 'loan') {
         // For loans, check if paid this month
         const paymentCount = getPaymentCountForCategory(expense.id);
         if (paymentCount >= expense.totalPayments) {
-            return { status: 'paid', label: 'Paid Off!' };
+            return { status: 'paid', label: I18n.t('status.paidOff') };
         }
         if (hasPaymentForMonth(expense.id, month, year)) {
-            return { status: 'paid', label: 'Paid this month' };
+            return { status: 'paid', label: I18n.t('status.paid') };
         }
     } else {
         // For recurring expenses - check if still past due before marking as paid
         const { pastDue } = getCreditOrPastDue(expense);
         if (pastDue > 0) {
             // Still past due, don't mark as paid even if payment made this month
-            return { status: 'overdue', label: 'Past Due!' };
+            return { status: 'overdue', label: I18n.t('status.pastDue') };
         }
         if (hasPaymentForMonth(expense.id, month, year)) {
-            return { status: 'paid', label: 'Paid this month' };
+            return { status: 'paid', label: I18n.t('status.paid') };
         }
     }
 
@@ -672,12 +702,12 @@ function getExpenseStatus(expense) {
     const daysUntilDue = dueDay - currentDay;
 
     if (daysUntilDue < 0) {
-        return { status: 'overdue', label: 'Overdue!' };
+        return { status: 'overdue', label: I18n.t('status.overdue') };
     }
     if (daysUntilDue <= 7) {
-        return { status: 'due-soon', label: `Due in ${daysUntilDue} day${daysUntilDue !== 1 ? 's' : ''}` };
+        return { status: 'due-soon', label: I18n.plural('status.dueSoon', daysUntilDue) };
     }
-    return { status: 'pending', label: `Due on the ${dueDay}${getOrdinalSuffix(dueDay)}` };
+    return { status: 'pending', label: I18n.t('status.dueOnThe', { ordinal: I18n.getOrdinal(dueDay) }) };
 }
 
 // Get ordinal suffix for a number
@@ -768,7 +798,7 @@ function createExpenseCard(expense) {
         progressHTML = `
             <div class="mt-4">
                 <div class="flex justify-between text-sm text-slate-400 mb-2">
-                    <span>${paymentCount} of ${expense.totalPayments} payments</span>
+                    <span>${I18n.t('progress.paymentsOf', { current: paymentCount, total: expense.totalPayments })}</span>
                     <span>${percentage}%</span>
                 </div>
                 <div class="h-2 bg-white/10 rounded-full overflow-hidden progress-bar-bg">
@@ -777,7 +807,7 @@ function createExpenseCard(expense) {
             </div>
         `;
         if (paymentCount < expense.totalPayments && status !== 'paid') {
-            actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', ${expense.amount})">Mark as Paid</button>`;
+            actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', ${expense.amount})">${I18n.t('button.markAsPaid')}</button>`;
         }
     } else if (expense.type === 'goal') {
         const totalSaved = getTotalPaymentsForCategory(expense.id);
@@ -819,15 +849,15 @@ function createExpenseCard(expense) {
 
         let paycheckBreakdown = '';
         if (remainingBalance > 0 && paychecksRemaining > 0) {
-            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${paychecksRemaining} paychecks left · ${getCurrencySymbol()}${formatCurrency(perPaycheck)}/paycheck</div>`;
+            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${I18n.t('progress.paychecksLeft', { count: paychecksRemaining })} · ${I18n.t('progress.perPaycheck', { amount: getCurrencySymbol() + formatCurrency(perPaycheck) })}</div>`;
         } else if (remainingBalance > 0 && paychecksRemaining === 0 && paidThisPayPeriod) {
-            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${getCurrencySymbol()}${formatCurrency(remainingBalance)} remaining</div>`;
+            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${I18n.t('progress.remaining', { amount: getCurrencySymbol() + formatCurrency(remainingBalance) })}</div>`;
         }
 
         progressHTML = `
             <div class="mt-4">
                 <div class="flex justify-between text-sm text-slate-400 mb-2">
-                    <span>${getCurrencySymbol()}${formatCurrency(totalSaved)} of ${getCurrencySymbol()}${formatCurrency(expense.amount)}</span>
+                    <span>${I18n.t('progress.savedOf', { saved: getCurrencySymbol() + formatCurrency(totalSaved), total: getCurrencySymbol() + formatCurrency(expense.amount) })}</span>
                     <span>${percentage}%</span>
                 </div>
                 <div class="h-2 bg-white/10 rounded-full overflow-hidden progress-bar-bg">
@@ -837,31 +867,31 @@ function createExpenseCard(expense) {
             </div>
         `;
         if (totalSaved < expense.amount) {
-            actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', null, true)">Add to Savings</button>`;
+            actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', null, true)">${I18n.t('button.addToSavings')}</button>`;
         }
     } else {
         // Recurring expense
         if (status !== 'paid') {
-            actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', ${expense.amount})">Mark as Paid</button>`;
+            actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', ${expense.amount})">${I18n.t('button.markAsPaid')}</button>`;
         }
     }
 
     const dueText = expense.type === 'goal'
-        ? `Due: ${expense.dueDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
-        : `Due: ${expense.dueDay}${getOrdinalSuffix(expense.dueDay)} of month`;
+        ? I18n.t('expense.dueDate', { date: expense.dueDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) })
+        : I18n.t('expense.dueDay', { ordinal: I18n.getOrdinal(expense.dueDay) });
 
     const amountText = expense.type === 'goal'
-        ? `${getCurrencySymbol()}${formatCurrency(expense.amount)} total`
-        : `${getCurrencySymbol()}${formatCurrency(expense.amount)}/month`;
+        ? I18n.t('expense.total', { amount: getCurrencySymbol() + formatCurrency(expense.amount) })
+        : I18n.t('expense.perMonth', { amount: getCurrencySymbol() + formatCurrency(expense.amount) });
 
     // Calculate credit or past due for recurring expenses
     let creditPastDueHTML = '';
     if (expense.type === 'recurring') {
         const { credit, pastDue } = getCreditOrPastDue(expense);
         if (credit > 0) {
-            creditPastDueHTML = `<div class="text-xs text-emerald-400">${getCurrencySymbol()}${formatCurrency(credit)} Credit</div>`;
+            creditPastDueHTML = `<div class="text-xs text-emerald-400">${I18n.t('expense.credit', { amount: getCurrencySymbol() + formatCurrency(credit) })}</div>`;
         } else if (pastDue > 0) {
-            creditPastDueHTML = `<div class="text-xs text-red-400">${getCurrencySymbol()}${formatCurrency(pastDue)} Past Due!</div>`;
+            creditPastDueHTML = `<div class="text-xs text-red-400">${I18n.t('expense.pastDue', { amount: getCurrencySymbol() + formatCurrency(pastDue) })}</div>`;
         }
     }
 
@@ -892,7 +922,7 @@ function renderPaymentHistory() {
     paymentHistory.innerHTML = '';
 
     if (payments.length === 0) {
-        paymentHistory.innerHTML = '<li class="px-6 py-8 text-center text-slate-500">No payments recorded yet</li>';
+        paymentHistory.innerHTML = `<li class="px-6 py-8 text-center text-slate-500">${I18n.t('history.noPayments')}</li>`;
         return;
     }
 
@@ -921,10 +951,10 @@ function renderPaymentHistory() {
             </div>
             <div class="flex items-center gap-2">
                 <span class="font-semibold text-emerald-400">${getCurrencySymbol()}${formatCurrency(payment.amount)}</span>
-                <button class="p-2 hover:bg-violet-500/20 rounded-lg transition-colors group" onclick="handleEditPayment('${payment.id}')" title="Edit payment">
+                <button class="p-2 hover:bg-violet-500/20 rounded-lg transition-colors group" onclick="handleEditPayment('${payment.id}')" title="${I18n.t('history.editPayment')}">
                     <i data-lucide="pencil" class="w-4 h-4 text-slate-500 group-hover:text-violet-400"></i>
                 </button>
-                <button class="p-2 hover:bg-red-500/20 rounded-lg transition-colors group" onclick="handleDeletePayment('${payment.id}')" title="Delete payment">
+                <button class="p-2 hover:bg-red-500/20 rounded-lg transition-colors group" onclick="handleDeletePayment('${payment.id}')" title="${I18n.t('history.deletePayment')}">
                     <i data-lucide="trash-2" class="w-4 h-4 text-slate-500 group-hover:text-red-400"></i>
                 </button>
             </div>
@@ -1013,21 +1043,21 @@ function updateSummary() {
     });
 
     if (hasPastDue && pastDueExpense) {
-        nextDueEl.textContent = `${pastDueExpense.name} (Past Due!)`;
+        nextDueEl.textContent = `${pastDueExpense.name} ${I18n.t('summary.pastDue')}`;
         nextDueEl.className = 'text-xl font-semibold text-red-400 truncate';
     } else if (nextDue) {
         if (minDaysUntil < 0) {
-            nextDueEl.textContent = `${nextDue.name} (Overdue!)`;
+            nextDueEl.textContent = `${nextDue.name} ${I18n.t('summary.overdue')}`;
             nextDueEl.className = 'text-xl font-semibold text-red-400 truncate';
         } else if (minDaysUntil === 0) {
-            nextDueEl.textContent = `${nextDue.name} (Today!)`;
+            nextDueEl.textContent = `${nextDue.name} ${I18n.t('summary.today')}`;
             nextDueEl.className = 'text-xl font-semibold text-yellow-400 truncate';
         } else {
-            nextDueEl.textContent = `${nextDue.name} (in ${minDaysUntil} day${minDaysUntil !== 1 ? 's' : ''})`;
+            nextDueEl.textContent = `${nextDue.name} ${I18n.plural('summary.inDays', minDaysUntil)}`;
             nextDueEl.className = 'text-xl font-semibold text-white truncate';
         }
     } else {
-        nextDueEl.textContent = 'All paid!';
+        nextDueEl.textContent = I18n.t('summary.allPaid');
         nextDueEl.className = 'text-xl font-semibold text-emerald-400 truncate';
     }
 }
@@ -1038,8 +1068,8 @@ function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
     if (!expense) return;
 
     document.getElementById('modal-title').textContent = isSavings
-        ? `Add to ${expense.name} Savings`
-        : `Record ${expense.name} Payment`;
+        ? I18n.t('modal.addToSavings', { name: expense.name })
+        : I18n.t('modal.recordPaymentFor', { name: expense.name });
 
     document.getElementById('payment-category').value = categoryId;
 
@@ -1108,8 +1138,8 @@ function handleEditPayment(paymentId) {
     editingPaymentId = paymentId;
 
     document.getElementById('modal-title').textContent = expense
-        ? `Edit ${expense.name} Payment`
-        : 'Edit Payment';
+        ? I18n.t('modal.editPaymentFor', { name: expense.name })
+        : I18n.t('modal.editPayment');
 
     document.getElementById('payment-category').value = payment.category;
     document.getElementById('payment-amount').value = payment.amount;
@@ -1135,7 +1165,7 @@ async function handlePaymentSubmit(e) {
     };
 
     if (!payment.amount || payment.amount <= 0) {
-        showToast('Please enter a valid amount', 'error');
+        showToast(I18n.t('toast.invalidAmount'), 'error');
         return;
     }
 
@@ -1145,7 +1175,7 @@ async function handlePaymentSubmit(e) {
         const totalSaved = getTotalPaymentsForCategory(expense.id);
         const remainingBalance = expense.amount - totalSaved;
         if (payment.amount > remainingBalance) {
-            showToast(`Amount exceeds remaining balance (${getCurrencySymbol()}${formatCurrency(remainingBalance)})`, 'error');
+            showToast(I18n.t('toast.exceedsBalance', { amount: getCurrencySymbol() + formatCurrency(remainingBalance) }), 'error');
             return;
         }
     }
@@ -1156,11 +1186,11 @@ async function handlePaymentSubmit(e) {
         if (editingPaymentId) {
             // Update existing payment
             await SheetsAPI.updatePayment(editingPaymentId, payment);
-            showToast('Payment updated successfully!', 'success');
+            showToast(I18n.t('toast.paymentUpdated'), 'success');
         } else {
             // Save new payment
             await SheetsAPI.savePayment(payment);
-            showToast('Payment saved successfully!', 'success');
+            showToast(I18n.t('toast.paymentSaved'), 'success');
         }
 
         payments = await SheetsAPI.getPayments();
@@ -1172,7 +1202,7 @@ async function handlePaymentSubmit(e) {
         closePaymentModal();
     } catch (error) {
         console.error('Error saving payment:', error);
-        showToast('Failed to save payment', 'error');
+        showToast(I18n.t('toast.paymentsFailed'), 'error');
     } finally {
         showLoading(false);
     }
@@ -1180,7 +1210,7 @@ async function handlePaymentSubmit(e) {
 
 // Handle payment deletion
 async function handleDeletePayment(paymentId) {
-    if (!confirm('Are you sure you want to delete this payment?')) {
+    if (!confirm(I18n.t('confirm.deletePayment'))) {
         return;
     }
 
@@ -1193,10 +1223,10 @@ async function handleDeletePayment(paymentId) {
         renderExpenseCards();
         renderPaymentHistory();
         updateSummary();
-        showToast('Payment deleted', 'success');
+        showToast(I18n.t('toast.paymentDeleted'), 'success');
     } catch (error) {
         console.error('Error deleting payment:', error);
-        showToast('Failed to delete payment', 'error');
+        showToast(I18n.t('toast.paymentsFailed'), 'error');
     } finally {
         showLoading(false);
     }
@@ -1247,7 +1277,7 @@ function openBulkPaymentModal() {
             <label for="bulk-check-${expense.id}" class="flex items-center gap-2 flex-1 cursor-pointer">
                 <span class="text-lg">${expense.icon}</span>
                 <span class="text-white">${expense.name}</span>
-                ${isPastDue ? '<span class="text-xs text-red-400">(Past Due)</span>' : ''}
+                ${isPastDue ? `<span class="text-xs text-red-400">${I18n.t('bulk.pastDue')}</span>` : ''}
             </label>
             <div class="flex items-center gap-1">
                 <span class="text-violet-400">${getCurrencySymbol()}</span>
@@ -1259,7 +1289,7 @@ function openBulkPaymentModal() {
 
     // Show message if no unpaid expenses
     if (expenseCheckboxList.children.length === 0) {
-        expenseCheckboxList.innerHTML = '<p class="text-center text-slate-500 py-4">All expenses are paid and current!</p>';
+        expenseCheckboxList.innerHTML = `<p class="text-center text-slate-500 py-4">${I18n.t('bulk.allPaid')}</p>`;
     }
 
     bulkPaymentModal.classList.remove('hidden');
@@ -1281,7 +1311,7 @@ async function handleBulkPaymentSubmit(e) {
     const checkboxes = expenseCheckboxList.querySelectorAll('input[type="checkbox"]:checked');
 
     if (checkboxes.length === 0) {
-        showToast('Please select at least one expense', 'error');
+        showToast(I18n.t('toast.selectExpense'), 'error');
         return;
     }
 
@@ -1295,7 +1325,7 @@ async function handleBulkPaymentSubmit(e) {
             const amount = parseFloat(amountInput.value);
 
             if (!amount || amount <= 0) {
-                showToast(`Invalid amount for ${expenseId}`, 'error');
+                showToast(I18n.t('toast.invalidAmountFor', { name: expenseId }), 'error');
                 showLoading(false);
                 return;
             }
@@ -1317,10 +1347,10 @@ async function handleBulkPaymentSubmit(e) {
         updateSummary();
 
         closeBulkPaymentModal();
-        showToast(`${checkboxes.length} payment${checkboxes.length > 1 ? 's' : ''} saved!`, 'success');
+        showToast(I18n.plural('toast.bulkPaymentsSaved', checkboxes.length), 'success');
     } catch (error) {
         console.error('Error saving bulk payments:', error);
-        showToast('Failed to save payments', 'error');
+        showToast(I18n.t('toast.paymentsFailed'), 'error');
     } finally {
         showLoading(false);
     }
@@ -1348,6 +1378,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize theme first (before any UI shows)
     initTheme();
 
+    // Initialize language selector (must be before currency for translations)
+    initLanguage();
+
     // Initialize currency selector
     initCurrency();
 
@@ -1360,7 +1393,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set up export CSV button
     document.getElementById('export-csv-btn')?.addEventListener('click', () => {
         SheetsAPI.exportToCSV();
-        showToast('Payments exported to CSV', 'success');
+        showToast(I18n.t('toast.paymentsExported'), 'success');
     });
 
     // Initialize bulk payment DOM elements

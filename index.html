@@ -69,17 +69,20 @@
 
     <!-- Version Tag, Theme Toggle, Currency & Lock Button -->
     <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
-        <div id="sync-indicator" class="flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-colors" title="Sync status">
+        <div id="sync-indicator" class="flex items-center gap-1 px-2 py-1 text-xs rounded-lg transition-colors" data-i18n-title="tooltip.syncStatus" title="Sync status">
             <i data-lucide="cloud" class="w-3 h-3"></i>
-            <span id="sync-status-text">Synced</span>
+            <span id="sync-status-text" data-i18n="sync.synced">Synced</span>
         </div>
-        <select id="currency-selector" title="Select currency" class="px-2 py-1.5 text-xs bg-white/5 border border-white/10 rounded-lg text-slate-400 hover:text-violet-400 hover:border-violet-500/50 focus:outline-none focus:border-violet-500 cursor-pointer transition-colors">
+        <select id="language-selector" data-i18n-title="tooltip.selectLanguage" title="Select language" class="px-2 py-1.5 text-xs bg-white/5 border border-white/10 rounded-lg text-slate-400 hover:text-violet-400 hover:border-violet-500/50 focus:outline-none focus:border-violet-500 cursor-pointer transition-colors">
             <!-- Options populated by JavaScript -->
         </select>
-        <button class="p-2 hover:bg-white/10 rounded-lg transition-colors group" id="theme-toggle" title="Toggle theme">
+        <select id="currency-selector" data-i18n-title="tooltip.selectCurrency" title="Select currency" class="px-2 py-1.5 text-xs bg-white/5 border border-white/10 rounded-lg text-slate-400 hover:text-violet-400 hover:border-violet-500/50 focus:outline-none focus:border-violet-500 cursor-pointer transition-colors">
+            <!-- Options populated by JavaScript -->
+        </select>
+        <button class="p-2 hover:bg-white/10 rounded-lg transition-colors group" id="theme-toggle" data-i18n-title="tooltip.toggleTheme" title="Toggle theme">
             <i data-lucide="moon" class="w-4 h-4 text-slate-500 group-hover:text-violet-400"></i>
         </button>
-        <button class="p-2 hover:bg-white/10 rounded-lg transition-colors group" id="lock-btn" title="Lock App">
+        <button class="p-2 hover:bg-white/10 rounded-lg transition-colors group" id="lock-btn" data-i18n-title="tooltip.lockApp" title="Lock App">
             <i data-lucide="lock" class="w-4 h-4 text-slate-500 group-hover:text-violet-400"></i>
         </button>
         <span class="text-xs text-slate-500" id="version-tag"></span>
@@ -88,10 +91,10 @@
     <div class="container mx-auto max-w-4xl px-4 py-8">
         <!-- Header -->
         <header class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-violet-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent mb-2">
+            <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-violet-400 via-cyan-400 to-violet-400 bg-clip-text text-transparent mb-2" data-i18n="app.title">
                 Alex's Expense Tracker
             </h1>
-            <p class="text-slate-400 text-sm">Track expenses, manage payments, reach your goals</p>
+            <p class="text-slate-400 text-sm" data-i18n="app.subtitle">Track expenses, manage payments, reach your goals</p>
         </header>
 
         <!-- Summary Cards -->
@@ -102,7 +105,7 @@
                 <div class="relative">
                     <div class="flex items-center gap-2 text-slate-400 text-sm mb-2">
                         <i data-lucide="wallet" class="w-4 h-4"></i>
-                        <span>Remaining This Month</span>
+                        <span data-i18n="summary.remaining">Remaining This Month</span>
                     </div>
                     <div class="text-3xl font-bold text-white" id="monthly-total">$0</div>
                 </div>
@@ -114,7 +117,7 @@
                 <div class="relative">
                     <div class="flex items-center gap-2 text-slate-400 text-sm mb-2">
                         <i data-lucide="calendar-clock" class="w-4 h-4"></i>
-                        <span>Next Due</span>
+                        <span data-i18n="summary.nextDue">Next Due</span>
                     </div>
                     <div class="text-xl font-semibold text-white truncate" id="next-due">-</div>
                 </div>
@@ -124,7 +127,7 @@
             <div class="relative bg-gradient-to-br from-violet-600/20 to-cyan-600/20 backdrop-blur-xl rounded-2xl p-6 border border-white/10 flex items-center justify-center card">
                 <button class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40 hover:scale-105" id="bulk-payment-btn">
                     <i data-lucide="plus-circle" class="w-5 h-5"></i>
-                    Bulk Payment
+                    <span data-i18n="button.bulkPayment">Bulk Payment</span>
                 </button>
             </div>
         </section>
@@ -139,11 +142,11 @@
             <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i data-lucide="history" class="w-5 h-5 text-slate-400"></i>
-                    <h2 class="text-lg font-semibold text-white">Recent Payments</h2>
+                    <h2 class="text-lg font-semibold text-white" data-i18n="history.title">Recent Payments</h2>
                 </div>
-                <button id="export-csv-btn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-400 hover:text-violet-400 hover:bg-white/5 rounded-lg transition-colors" title="Export to CSV">
+                <button id="export-csv-btn" class="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-400 hover:text-violet-400 hover:bg-white/5 rounded-lg transition-colors" data-i18n-title="tooltip.exportCSV" title="Export to CSV">
                     <i data-lucide="download" class="w-4 h-4"></i>
-                    <span>Export</span>
+                    <span data-i18n="button.export">Export</span>
                 </button>
             </div>
             <ul class="divide-y divide-white/5" id="payment-history">
@@ -156,7 +159,7 @@
             <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="payment-modal-backdrop"></div>
             <div class="relative w-full max-w-md bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl animate-slide-up modal-content">
                 <div class="flex items-center justify-between p-6 border-b border-white/10">
-                    <h3 class="text-xl font-semibold text-white" id="modal-title">Record Payment</h3>
+                    <h3 class="text-xl font-semibold text-white" id="modal-title" data-i18n="modal.recordPayment">Record Payment</h3>
                     <button class="p-2 hover:bg-white/10 rounded-lg transition-colors" id="close-modal">
                         <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
                     </button>
@@ -164,22 +167,22 @@
                 <form id="payment-form" class="p-6 space-y-4">
                     <input type="hidden" id="payment-category">
                     <div>
-                        <label for="payment-amount" class="block text-sm font-medium text-slate-400 mb-2">Amount</label>
+                        <label for="payment-amount" class="block text-sm font-medium text-slate-400 mb-2" data-i18n="label.amount">Amount</label>
                         <input type="number" id="payment-amount" step="0.01" required
                             class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
                     <div>
-                        <label for="payment-date" class="block text-sm font-medium text-slate-400 mb-2">Date</label>
+                        <label for="payment-date" class="block text-sm font-medium text-slate-400 mb-2" data-i18n="label.date">Date</label>
                         <input type="date" id="payment-date" required
                             class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
                     <div>
-                        <label for="payment-notes" class="block text-sm font-medium text-slate-400 mb-2">Notes (optional)</label>
-                        <input type="text" id="payment-notes" placeholder="e.g., Paid to Mom, Paid to David, etc."
+                        <label for="payment-notes" class="block text-sm font-medium text-slate-400 mb-2" data-i18n="label.notes">Notes (optional)</label>
+                        <input type="text" id="payment-notes" data-i18n-placeholder="placeholder.notes" placeholder="e.g., Paid to Mom, Paid to David, etc."
                             class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
                     <button type="submit"
-                        class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40">
+                        class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40" data-i18n="button.savePayment">
                         Save Payment
                     </button>
                 </form>
@@ -191,30 +194,30 @@
             <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="bulk-modal-backdrop"></div>
             <div class="relative w-full max-w-md bg-slate-900/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl animate-slide-up modal-content">
                 <div class="flex items-center justify-between p-6 border-b border-white/10">
-                    <h3 class="text-xl font-semibold text-white">Bulk Payment</h3>
+                    <h3 class="text-xl font-semibold text-white" data-i18n="modal.bulkPayment">Bulk Payment</h3>
                     <button class="p-2 hover:bg-white/10 rounded-lg transition-colors" id="close-bulk-modal">
                         <i data-lucide="x" class="w-5 h-5 text-slate-400"></i>
                     </button>
                 </div>
                 <form id="bulk-payment-form" class="p-6 space-y-4">
                     <div>
-                        <label for="bulk-payment-date" class="block text-sm font-medium text-slate-400 mb-2">Payment Date</label>
+                        <label for="bulk-payment-date" class="block text-sm font-medium text-slate-400 mb-2" data-i18n="label.paymentDate">Payment Date</label>
                         <input type="date" id="bulk-payment-date" required
                             class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-400 mb-2">Select Expenses to Pay</label>
+                        <label class="block text-sm font-medium text-slate-400 mb-2" data-i18n="label.selectExpenses">Select Expenses to Pay</label>
                         <div class="max-h-60 overflow-y-auto bg-white/5 border border-white/10 rounded-xl p-2 space-y-1" id="expense-checkbox-list">
                             <!-- Checkboxes will be rendered by JavaScript -->
                         </div>
                     </div>
                     <div>
-                        <label for="bulk-payment-notes" class="block text-sm font-medium text-slate-400 mb-2">Notes (optional)</label>
-                        <input type="text" id="bulk-payment-notes" placeholder="Paid to Mom, Paid to David, etc."
+                        <label for="bulk-payment-notes" class="block text-sm font-medium text-slate-400 mb-2" data-i18n="label.notes">Notes (optional)</label>
+                        <input type="text" id="bulk-payment-notes" data-i18n-placeholder="placeholder.bulkNotes" placeholder="Paid to Mom, Paid to David, etc."
                             class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors">
                     </div>
                     <button type="submit"
-                        class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40">
+                        class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40" data-i18n="button.paySelected">
                         Pay Selected
                     </button>
                 </form>
@@ -225,7 +228,7 @@
         <div class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm" id="loading">
             <div class="flex flex-col items-center gap-4">
                 <div class="w-12 h-12 border-4 border-violet-600/30 border-t-violet-600 rounded-full animate-spin"></div>
-                <p class="text-slate-400">Loading...</p>
+                <p class="text-slate-400" data-i18n="loading.text">Loading...</p>
             </div>
         </div>
 
@@ -237,29 +240,29 @@
                     <div class="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-gradient-to-br from-violet-600/20 to-cyan-600/20">
                         <i data-lucide="shield-check" class="w-8 h-8 text-violet-400"></i>
                     </div>
-                    <h3 class="text-xl font-semibold text-white" id="password-modal-title">Unlock App</h3>
-                    <p class="text-sm text-slate-400 mt-1" id="password-modal-subtitle">Enter your password to continue</p>
+                    <h3 class="text-xl font-semibold text-white" id="password-modal-title" data-i18n="modal.unlockApp">Unlock App</h3>
+                    <p class="text-sm text-slate-400 mt-1" id="password-modal-subtitle" data-i18n="modal.unlockSubtitle">Enter your password to continue</p>
                 </div>
                 <form id="password-form" class="p-6 space-y-4">
                     <div>
-                        <label for="password-input" class="block text-sm font-medium text-slate-400 mb-2">Password</label>
+                        <label for="password-input" class="block text-sm font-medium text-slate-400 mb-2" data-i18n="label.password">Password</label>
                         <input type="password" id="password-input" required autocomplete="current-password"
                             class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors"
-                            placeholder="Enter password">
+                            data-i18n-placeholder="placeholder.password" placeholder="Enter password">
                     </div>
                     <div id="confirm-password-group" class="hidden">
-                        <label for="confirm-password-input" class="block text-sm font-medium text-slate-400 mb-2">Confirm Password</label>
+                        <label for="confirm-password-input" class="block text-sm font-medium text-slate-400 mb-2" data-i18n="label.confirmPassword">Confirm Password</label>
                         <input type="password" id="confirm-password-input" autocomplete="new-password"
                             class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors"
-                            placeholder="Confirm password">
+                            data-i18n-placeholder="placeholder.confirmPassword" placeholder="Confirm password">
                     </div>
                     <button type="submit" id="password-submit-btn"
-                        class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40">
+                        class="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-violet-600/25 hover:shadow-violet-600/40" data-i18n="button.unlock">
                         Unlock
                     </button>
                 </form>
                 <div class="px-6 pb-6 text-center hidden" id="forgot-password-container">
-                    <button type="button" id="forgot-password-btn" class="text-sm text-slate-500 hover:text-red-400 transition-colors">
+                    <button type="button" id="forgot-password-btn" class="text-sm text-slate-500 hover:text-red-400 transition-colors" data-i18n="confirm.forgotPassword">
                         Forgot password? Reset app data
                     </button>
                 </div>
@@ -274,15 +277,15 @@
                     <div class="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-red-500/20">
                         <i data-lucide="alert-triangle" class="w-8 h-8 text-red-400"></i>
                     </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">Reset App Data?</h3>
-                    <p class="text-sm text-slate-400 mb-6">This will delete all local payment data and password. Cloud data (Google Sheets) will remain safe.</p>
+                    <h3 class="text-xl font-semibold text-white mb-2" data-i18n="modal.resetData">Reset App Data?</h3>
+                    <p class="text-sm text-slate-400 mb-6" data-i18n="modal.resetSubtitle">This will delete all local payment data and password. Cloud data (Google Sheets) will remain safe.</p>
                     <div class="flex gap-3">
                         <button type="button" id="cancel-reset-btn"
-                            class="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors">
+                            class="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-colors" data-i18n="button.cancel">
                             Cancel
                         </button>
                         <button type="button" id="confirm-reset-btn"
-                            class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors">
+                            class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-medium rounded-xl transition-colors" data-i18n="button.reset">
                             Reset
                         </button>
                     </div>
@@ -297,6 +300,7 @@
     <script src="js/config.js"></script>
     <script src="js/encryption.js"></script>
     <script src="js/sheets-api.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="js/app.js"></script>
 
     <!-- Service Worker Registration -->

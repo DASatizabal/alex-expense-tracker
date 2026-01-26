@@ -269,3 +269,15 @@ body.light-mode #currency-selector:hover {
     color: #7c3aed !important;
     border-color: #a78bfa !important;
 }
+
+/* Language selector light mode */
+body.light-mode #language-selector {
+    background-color: #ffffff !important;
+    border-color: #cbd5e1 !important;
+    color: #64748b !important;
+}
+
+body.light-mode #language-selector:hover {
+    color: #7c3aed !important;
+    border-color: #a78bfa !important;
+}

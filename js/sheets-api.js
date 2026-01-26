@@ -316,11 +316,17 @@ const SheetsAPI = {
     exportToCSV() {
         const payments = this.getPaymentsFromLocalStorage();
         if (payments.length === 0) {
-            alert('No payments to export');
+            alert(I18n.t('history.noPayments'));
             return;
         }
 
-        const headers = ['Date', 'Category', 'Amount', 'Notes', 'ID'];
+        const headers = [
+            I18n.t('csv.date'),
+            I18n.t('csv.category'),
+            I18n.t('csv.amount'),
+            I18n.t('csv.notes'),
+            I18n.t('csv.id')
+        ];
         const rows = payments.map(p => [
             p.date,
             p.category,
