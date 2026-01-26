@@ -849,10 +849,13 @@ function createExpenseCard(expense) {
 
         let paycheckBreakdown = '';
         if (remainingBalance > 0 && paychecksRemaining > 0) {
-            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${I18n.t('progress.paychecksLeft', { count: paychecksRemaining })} · ${I18n.t('progress.perPaycheck', { amount: getCurrencySymbol() + formatCurrency(perPaycheck) })}</div>`;
-        } else if (remainingBalance > 0 && paychecksRemaining === 0 && paidThisPayPeriod) {
-            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-2">${I18n.t('progress.remaining', { amount: getCurrencySymbol() + formatCurrency(remainingBalance) })}</div>`;
+            paycheckBreakdown = `<div class="text-xs text-slate-500 mt-1">${I18n.t('progress.paychecksLeft', { count: paychecksRemaining })} · ${I18n.t('progress.perPaycheck', { amount: getCurrencySymbol() + formatCurrency(perPaycheck) })}</div>`;
         }
+
+        // Show remaining amount prominently
+        const remainingHTML = remainingBalance > 0
+            ? `<div class="text-sm font-medium text-cyan-400 mt-2">${I18n.t('progress.remaining', { amount: getCurrencySymbol() + formatCurrency(remainingBalance) })}</div>`
+            : '';
 
         progressHTML = `
             <div class="mt-4">
@@ -863,6 +866,7 @@ function createExpenseCard(expense) {
                 <div class="h-2 bg-white/10 rounded-full overflow-hidden progress-bar-bg">
                     <div class="h-full progress-gradient rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
                 </div>
+                ${remainingHTML}
                 ${paycheckBreakdown}
             </div>
         `;
