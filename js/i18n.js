@@ -125,11 +125,20 @@ const I18n = {
 
             // Expense card text
             'expense.perMonth': '{{amount}}/month',
+            'expense.estimated': '~{{amount}}/month',
+            'expense.average': 'Avg: {{amount}}',
+            'expense.noHistory': 'No history yet',
+            'expense.avgHint': 'Last 3-month avg: {{amount}}',
+            'expense.estimatedHint': 'Estimated: {{amount}}',
+            'expense.trend.up': '↑',
+            'expense.trend.down': '↓',
+            'expense.trend.stable': '≈',
             'expense.total': '{{amount}} total',
             'expense.dueDate': 'Due: {{date}}',
             'expense.dueDay': 'Due: {{ordinal}} of month',
             'expense.credit': '{{amount}} Credit',
             'expense.pastDue': '{{amount}} Past Due!',
+            'status.variableDue': 'Variable - due {{ordinal}}',
 
             // Payment history
             'history.title': 'Recent Payments',
@@ -284,11 +293,20 @@ const I18n = {
 
             // Expense card text
             'expense.perMonth': '{{amount}}/mes',
+            'expense.estimated': '~{{amount}}/mes',
+            'expense.average': 'Prom: {{amount}}',
+            'expense.noHistory': 'Sin historial',
+            'expense.avgHint': 'Promedio últimos 3 meses: {{amount}}',
+            'expense.estimatedHint': 'Estimado: {{amount}}',
+            'expense.trend.up': '↑',
+            'expense.trend.down': '↓',
+            'expense.trend.stable': '≈',
             'expense.total': '{{amount}} total',
             'expense.dueDate': 'Vence: {{date}}',
             'expense.dueDay': 'Vence: {{ordinal}} del mes',
             'expense.credit': '{{amount}} Crédito',
             'expense.pastDue': '¡{{amount}} Atrasado!',
+            'status.variableDue': 'Variable - vence {{ordinal}}',
 
             // Payment history
             'history.title': 'Pagos Recientes',
@@ -443,11 +461,20 @@ const I18n = {
 
             // Expense card text
             'expense.perMonth': '{{amount}}/mwa',
+            'expense.estimated': '~{{amount}}/mwa',
+            'expense.average': 'Mwayèn: {{amount}}',
+            'expense.noHistory': 'Pa gen istwa toujou',
+            'expense.avgHint': 'Mwayèn 3 dènye mwa: {{amount}}',
+            'expense.estimatedHint': 'Estimasyon: {{amount}}',
+            'expense.trend.up': '↑',
+            'expense.trend.down': '↓',
+            'expense.trend.stable': '≈',
             'expense.total': '{{amount}} total',
             'expense.dueDate': 'Dwe: {{date}}',
             'expense.dueDay': 'Dwe: {{ordinal}} nan mwa',
             'expense.credit': '{{amount}} Kredi',
             'expense.pastDue': '{{amount}} An Reta!',
+            'status.variableDue': 'Varyab - dwe {{ordinal}}',
 
             // Payment history
             'history.title': 'Peman Resan',

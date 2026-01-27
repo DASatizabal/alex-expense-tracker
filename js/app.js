@@ -685,6 +685,11 @@ function getExpenseStatus(expense) {
         if (hasPaymentForMonth(expense.id, month, year)) {
             return { status: 'paid', label: I18n.t('status.paid') };
         }
+    } else if (expense.type === 'variable') {
+        // For variable expenses, check if paid this month
+        if (hasPaymentForMonth(expense.id, month, year)) {
+            return { status: 'paid', label: I18n.t('status.paid') };
+        }
     } else {
         // For recurring expenses - check if still past due before marking as paid
         const { pastDue } = getCreditOrPastDue(expense);
@@ -715,6 +720,46 @@ function getOrdinalSuffix(n) {
     const s = ['th', 'st', 'nd', 'rd'];
     const v = n % 100;
     return s[(v - 20) % 10] || s[v] || s[0];
+}
+
+// Get payments for a specific expense category
+function getPaymentsForExpense(expenseId) {
+    return payments.filter(p => p.category === expenseId);
+}
+
+// Calculate 3-month average for variable expenses
+function calculateAverage(expenseId) {
+    const expensePayments = getPaymentsForExpense(expenseId);
+    if (expensePayments.length === 0) return null;
+
+    // Sort by date descending, take last 3
+    const recent = expensePayments
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 3);
+
+    const sum = recent.reduce((acc, p) => acc + p.amount, 0);
+    return sum / recent.length;
+}
+
+// Calculate trend for variable expenses
+function calculateTrend(expenseId) {
+    const expensePayments = getPaymentsForExpense(expenseId);
+    if (expensePayments.length < 2) return 'none';
+
+    const sorted = expensePayments
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 3);
+
+    if (sorted.length < 2) return 'stable';
+
+    const recent = sorted[0].amount;
+    const previous = sorted[1].amount;
+    const diff = recent - previous;
+    const threshold = previous * 0.1; // 10% threshold
+
+    if (diff > threshold) return 'up';
+    if (diff < -threshold) return 'down';
+    return 'stable';
 }
 
 // Sort expenses by: paid status (unpaid first), due date (soonest first), amount (highest first)
@@ -873,6 +918,30 @@ function createExpenseCard(expense) {
         if (totalSaved < expense.amount) {
             actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', null, true)">${I18n.t('button.addToSavings')}</button>`;
         }
+    } else if (expense.type === 'variable') {
+        // Variable expense - show estimated, average, and trend
+        const average = calculateAverage(expense.id);
+        const trend = calculateTrend(expense.id);
+
+        // Build average and trend display
+        let averageHTML = '';
+        if (average !== null) {
+            averageHTML = `<div class="text-sm text-slate-400">${I18n.t('expense.average', { amount: getCurrencySymbol() + formatCurrency(average) })}</div>`;
+        } else {
+            averageHTML = `<div class="text-sm text-slate-500">${I18n.t('expense.noHistory')}</div>`;
+        }
+
+        progressHTML = `
+            <div class="mt-2">
+                ${averageHTML}
+            </div>
+        `;
+
+        if (status !== 'paid') {
+            // Pre-fill with average if available, else estimated amount
+            const prefillAmount = average !== null ? average.toFixed(2) : expense.amount;
+            actionButton = `<button class="w-full mt-4 py-2.5 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-medium rounded-xl transition-all duration-300" onclick="openPaymentModal('${expense.id}', ${prefillAmount})">${I18n.t('button.markAsPaid')}</button>`;
+        }
     } else {
         // Recurring expense
         if (status !== 'paid') {
@@ -886,6 +955,8 @@ function createExpenseCard(expense) {
 
     const amountText = expense.type === 'goal'
         ? I18n.t('expense.total', { amount: getCurrencySymbol() + formatCurrency(expense.amount) })
+        : expense.type === 'variable'
+        ? I18n.t('expense.estimated', { amount: getCurrencySymbol() + formatCurrency(expense.amount) })
         : I18n.t('expense.perMonth', { amount: getCurrencySymbol() + formatCurrency(expense.amount) });
 
     // Calculate credit or past due for recurring expenses
@@ -899,11 +970,26 @@ function createExpenseCard(expense) {
         }
     }
 
+    // Calculate trend badge for variable expenses
+    let trendBadgeHTML = '';
+    if (expense.type === 'variable') {
+        const trend = calculateTrend(expense.id);
+        if (trend !== 'none') {
+            const trendColors = {
+                'up': 'text-red-400',
+                'down': 'text-emerald-400',
+                'stable': 'text-slate-400'
+            };
+            trendBadgeHTML = `<span class="text-lg ${trendColors[trend]}">${I18n.t('expense.trend.' + trend)}</span>`;
+        }
+    }
+
     card.innerHTML = `
         <div class="flex justify-between items-start mb-3">
             <div class="flex items-center gap-3">
                 <span class="text-2xl">${expense.icon}</span>
                 <span class="font-semibold text-white">${expense.name}</span>
+                ${trendBadgeHTML}
             </div>
             <div class="text-right">
                 <span class="text-lg font-bold text-violet-400">${amountText}</span>
@@ -999,6 +1085,14 @@ function updateSummary() {
             if (paymentCount >= expense.totalPayments) return;
             if (hasPaymentForMonth(expense.id, month, year)) return;
             remainingAmount += expense.amount;
+            return;
+        }
+
+        // For variable expenses, use average or estimated amount
+        if (expense.type === 'variable') {
+            if (hasPaymentForMonth(expense.id, month, year)) return;
+            const average = calculateAverage(expense.id);
+            remainingAmount += average !== null ? average : expense.amount;
         }
     });
 
@@ -1261,9 +1355,12 @@ function openBulkPaymentModal() {
             const paymentCount = getPaymentCountForCategory(expense.id);
             if (paymentCount >= expense.totalPayments) return;
             if (hasPaymentForMonth(expense.id, month, year)) return;
+        } else if (expense.type === 'variable') {
+            // For variable expenses, skip if paid this month
+            if (hasPaymentForMonth(expense.id, month, year)) return;
         }
 
-        // Calculate default amount: past due amount if past due, else monthly amount
+        // Calculate default amount: past due amount if past due, else monthly/average amount
         let defaultAmount = expense.amount;
         let isPastDue = false;
         if (expense.type === 'recurring') {
@@ -1271,6 +1368,12 @@ function openBulkPaymentModal() {
             if (pastDue > 0) {
                 defaultAmount = pastDue;
                 isPastDue = true;
+            }
+        } else if (expense.type === 'variable') {
+            // For variable expenses, use 3-month average if available
+            const average = calculateAverage(expense.id);
+            if (average !== null) {
+                defaultAmount = average;
             }
         }
 

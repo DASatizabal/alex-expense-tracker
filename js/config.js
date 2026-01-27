@@ -89,10 +89,19 @@ const EXPENSES = [
         type: 'goal',
         dueDate: new Date(2026, 6, 23), // Due July 23, 2026 (month is 0-indexed)
         description: 'Cruise savings goal - $1,371.50 by July 23, 2026'
+    },
+    {
+        id: 'electric',
+        name: 'Electric',
+        icon: '\u{26A1}',
+        amount: 100,       // Estimated monthly amount
+        type: 'variable',
+        dueDay: 15,
+        description: 'Electric bill (varies by usage)'
     }
 ];
 
-// Calculate total monthly expenses (recurring + loan payments)
+// Calculate total monthly expenses (recurring + loan + variable payments)
 const MONTHLY_TOTAL = EXPENSES
-    .filter(e => e.type === 'recurring' || e.type === 'loan')
+    .filter(e => e.type === 'recurring' || e.type === 'loan' || e.type === 'variable')
     .reduce((sum, e) => sum + e.amount, 0);
