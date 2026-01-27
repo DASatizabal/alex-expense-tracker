@@ -1,5 +1,5 @@
 // Service Worker for Alex's Expense Tracker
-const CACHE_NAME = 'expense-tracker-v2';
+const CACHE_NAME = 'expense-tracker-v3';
 const ASSETS_TO_CACHE = [
     '/alex-expense-tracker/',
     '/alex-expense-tracker/index.html',

@@ -1,6 +1,6 @@
 # Alex's Expense Tracker
 
-**Version 2.8.0** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
+**Version 2.9.0** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
 
 A modern, mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for cloud storage.
 
@@ -19,6 +19,8 @@ A modern, mobile-friendly web app for tracking recurring expenses, loan payments
 - **Modern UI** - Dark/light glassmorphism theme with animations (Tailwind CSS + Lucide icons)
 - **Theme Toggle** - Switch between dark and light modes with system preference detection
 - **Currency Selector** - Support for 10 currencies (USD, EUR, GBP, CAD, AUD, MXN, JPY, INR, BRL, CHF)
+- **Internationalization (i18n)** - Full translation support with English, Spanish, and Haitian Creole
+- **Language Selector** - Switch languages with browser auto-detection
 - **Sync Status Indicator** - Visual feedback showing synced, syncing, or offline status
 - **Edit Payments** - Modify existing payments (amount, date, notes)
 - **CSV Export** - Export payment history to CSV file for backup
@@ -54,6 +56,8 @@ alex-expense-tracker/
 │   └── styles.css          # Custom styling (animations, scrollbars)
 ├── js/
 │   ├── config.js           # Configuration (expenses, API URL, version)
+│   ├── encryption.js       # Password protection (AES-GCM, PBKDF2)
+│   ├── i18n.js             # Internationalization (English, Spanish, Haitian Creole)
 │   ├── sheets-api.js       # API layer (cloud + localStorage)
 │   └── app.js              # Main application logic
 ├── icons/                  # PWA icons (192x192, 512x512, maskable)

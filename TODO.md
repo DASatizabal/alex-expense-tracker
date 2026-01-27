@@ -22,7 +22,8 @@ Transform this single-user expense tracker into a **multi-tenant personal financ
 
 - [x] Dark/Light theme toggle — ✅ **DONE v2.5.2** - CSS override approach, exact v2.4.1 dark + traditional light
 - [x] Currency selector — **DONE v2.7.0** - 10 currencies with localStorage persistence
-- [ ] Language i18n skeleton — prep for future localization
+- [x] Language i18n skeleton — **DONE v2.9.0** - full translation system with English, Spanish, Haitian Creole
+- [x] Language selector — **DONE v2.9.0** - switch languages with browser auto-detection
 - [x] PWA manifest — **DONE v2.6.0** - installable on home screen with service worker
 - [x] Offline indicator — **DONE v2.8.0** - sync status indicator (synced/syncing/offline)
 
@@ -578,7 +579,9 @@ NOW (Week 1-2)
 ├── [x] Currency selector (v2.7.0)
 ├── [x] Offline indicator (v2.8.0)
 ├── [x] Edit payment (v2.8.0)
-└── [x] Basic export to CSV (v2.8.0)
+├── [x] Basic export to CSV (v2.8.0)
+├── [x] Language i18n skeleton (v2.9.0)
+└── [x] Spanish & Haitian Creole translations (v2.9.0)
 
 SHORT-TERM (Month 1-2)
 ├── [ ] Google OAuth
@@ -639,6 +642,8 @@ alex-expense-tracker/
 │   └── styles.css          # Custom styling
 ├── js/
 │   ├── config.js           # Configuration (expenses, API URL)
+│   ├── encryption.js       # Password protection (AES-GCM, PBKDF2)
+│   ├── i18n.js             # Internationalization (EN, ES, HT)
 │   ├── sheets-api.js       # API layer (cloud + localStorage)
 │   └── app.js              # Main application logic
 ├── README.md

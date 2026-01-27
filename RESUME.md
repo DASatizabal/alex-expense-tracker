@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.8.0**
+**Current Version: 2.9.0**
 
 ## Quick Links
 
@@ -27,6 +27,9 @@ Data syncs to Google Sheets so it persists across devices.
 ## Current State (January 2026)
 
 ### Working Features
+- **Internationalization (i18n)** - full translation system with English, Spanish, and Haitian Creole
+- **Language selector** - switch languages with browser auto-detection and localStorage persistence
+- **Prominent remaining balance** - goal cards now show remaining amount prominently
 - **Sync status indicator** - shows synced/syncing/offline status in real-time
 - **Edit payments** - modify existing payments (amount, date, notes)
 - **CSV export** - export payment history to CSV file
@@ -64,6 +67,7 @@ alex-expense-tracker/
 ├── js/
 │   ├── config.js           # Settings + expense definitions + encryption config
 │   ├── encryption.js       # Web Crypto API (AES-GCM, PBKDF2) for passwords
+│   ├── i18n.js             # Internationalization (English, Spanish, Haitian Creole)
 │   ├── sheets-api.js       # API layer (cloud + localStorage + session cache)
 │   └── app.js              # UI logic + password protection flow
 ├── icons/                  # PWA icons (192, 512, maskable)
@@ -79,7 +83,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.8.0'
+APP_VERSION: '2.9.0'
 ENCRYPTION: {
     ALGORITHM: 'AES-GCM',
     KEY_LENGTH: 256,
@@ -193,6 +197,7 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 
 | Version | Changes |
 |---------|---------|
+| v2.9.0 | **Internationalization (i18n)**: Full translation system with English, Spanish, Haitian Creole; language selector with browser auto-detection; prominent remaining balance display on goal cards |
 | v2.8.0 | **Offline indicator, Edit payment, CSV export**: Sync status indicator, edit existing payments, export to CSV button |
 | v2.7.0 | **Currency selector**: 10 currencies (USD, EUR, GBP, CAD, AUD, MXN, JPY, INR, BRL, CHF) with localStorage persistence |
 | v2.6.0 | **PWA support**: Installable app with manifest, service worker for offline caching, custom wallet icons |
@@ -242,3 +247,4 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 9. Added PWA support (v2.6.0) with service worker and custom icons
 10. Added currency selector (v2.7.0) with 10 currencies
 11. Added sync indicator, edit payment, CSV export (v2.8.0)
+12. Added internationalization with Spanish and Haitian Creole (v2.9.0)
