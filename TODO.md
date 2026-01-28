@@ -27,6 +27,58 @@ Transform this single-user expense tracker into a **multi-tenant personal financ
 - [x] PWA manifest — **DONE v2.6.0** - installable on home screen with service worker
 - [x] Offline indicator — **DONE v2.8.0** - sync status indicator (synced/syncing/offline)
 
+### User Admin Panel (Next Up)
+
+- [ ] **Admin link in header** — Settings/gear icon next to lock button
+- [ ] **Expense management** — Add, edit, delete expense cards (stored in localStorage)
+- [ ] **Default currency setting** — Choose base currency for all expenses
+- [ ] **Real-time currency conversion** — Convert amounts using previous day's exchange rates
+
+**Currency Conversion Implementation:**
+```javascript
+// Use free API like exchangerate-api.com or frankfurter.app
+// Store base currency in localStorage
+// On display: convert from base currency to selected display currency
+// Rate source: Previous day's closing rate (standard practice)
+
+const CurrencyConverter = {
+    baseRate: null,  // Cached rates
+    lastFetch: null,
+
+    async getRates() {
+        // Fetch once per session, cache for 24h
+        // GET https://api.frankfurter.app/latest?from=USD
+    },
+
+    convert(amount, from, to) {
+        // amount * (rates[to] / rates[from])
+    }
+};
+```
+
+**Admin Panel UI:**
+```
+┌─────────────────────────────────────────────────┐
+│  ⚙️ Settings                              [X]   │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  Default Currency: [USD ▼]                      │
+│  (All expenses stored in this currency)         │
+│                                                 │
+│  ─────────────────────────────────────────────  │
+│                                                 │
+│  📋 Manage Expenses                             │
+│                                                 │
+│  🏠 Rent              $300    Due: 1st   [✏️][🗑️]│
+│  🚗 Car Insurance     $150    Due: 15th  [✏️][🗑️]│
+│  📱 Phone             $50     Due: 22nd  [✏️][🗑️]│
+│  🚢 Cruise (Goal)     $1800   Jul 2026   [✏️][🗑️]│
+│                                                 │
+│  [+ Add New Expense]                            │
+│                                                 │
+└─────────────────────────────────────────────────┘
+```
+
 ---
 
 ## 📍 Phase 2: Multi-User & Templates (2-4 weeks)
@@ -584,6 +636,8 @@ NOW (Week 1-2)
 └── [x] Spanish & Haitian Creole translations (v2.9.0)
 
 SHORT-TERM (Month 1-2)
+├── [ ] User admin panel (add/edit/delete expenses, default currency)
+├── [ ] Real-time currency conversion (previous day's exchange rates)
 ├── [ ] Google OAuth
 ├── [ ] Onboarding wizard
 ├── [ ] 3-5 user templates
