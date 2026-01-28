@@ -27,11 +27,11 @@ Transform this single-user expense tracker into a **multi-tenant personal financ
 - [x] PWA manifest — **DONE v2.6.0** - installable on home screen with service worker
 - [x] Offline indicator — **DONE v2.8.0** - sync status indicator (synced/syncing/offline)
 
-### User Admin Panel (Next Up)
+### User Admin Panel
 
-- [ ] **Admin link in header** — Settings/gear icon next to lock button
-- [ ] **Expense management** — Add, edit, delete expense cards (stored in localStorage)
-- [ ] **Default currency setting** — Choose base currency for all expenses
+- [x] **Admin link in header** — Settings/gear icon next to lock button ✅ **DONE v2.10.0**
+- [x] **Expense management** — Add, edit, delete expense cards (stored in localStorage) ✅ **DONE v2.10.0**
+- [x] **Default currency setting** — Choose base currency for all expenses ✅ **DONE v2.10.0**
 - [ ] **Real-time currency conversion** — Convert amounts using previous day's exchange rates
 
 **Currency Conversion Implementation:**
@@ -633,10 +633,10 @@ NOW (Week 1-2)
 ├── [x] Edit payment (v2.8.0)
 ├── [x] Basic export to CSV (v2.8.0)
 ├── [x] Language i18n skeleton (v2.9.0)
-└── [x] Spanish & Haitian Creole translations (v2.9.0)
+├── [x] Spanish & Haitian Creole translations (v2.9.0)
+└── [x] User admin panel (v2.10.0)
 
 SHORT-TERM (Month 1-2)
-├── [ ] User admin panel (add/edit/delete expenses, default currency)
 ├── [ ] Real-time currency conversion (previous day's exchange rates)
 ├── [ ] Google OAuth
 ├── [ ] Onboarding wizard

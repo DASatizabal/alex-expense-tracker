@@ -114,6 +114,7 @@ body.light-mode .border-white\/10 {
 
 /* Buttons hover in light mode */
 body.light-mode #theme-toggle:hover,
+body.light-mode #settings-btn:hover,
 body.light-mode #lock-btn:hover {
     background-color: rgba(0, 0, 0, 0.05) !important;
 }

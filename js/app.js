@@ -33,6 +33,250 @@ function updateThemeIcon(isDark) {
 
 // Currency Management
 let currentCurrency = DEFAULT_CURRENCY;
+let defaultCurrency = DEFAULT_CURRENCY;
+
+// Expense Management - load from localStorage or use defaults
+let userExpenses = null;
+
+function loadExpenses() {
+    const saved = localStorage.getItem('alex_expense_config');
+    if (saved) {
+        try {
+            const config = JSON.parse(saved);
+            userExpenses = config.expenses || [];
+            defaultCurrency = config.defaultCurrency || DEFAULT_CURRENCY;
+            // Convert date strings back to Date objects for goals
+            userExpenses = userExpenses.map(e => {
+                if (e.type === 'goal' && e.dueDate) {
+                    e.dueDate = new Date(e.dueDate);
+                }
+                return e;
+            });
+        } catch (e) {
+            console.error('Error loading expense config:', e);
+            userExpenses = [...EXPENSES];
+        }
+    } else {
+        // First time - use default expenses from config.js
+        userExpenses = [...EXPENSES];
+    }
+    return userExpenses;
+}
+
+function saveExpenseConfig() {
+    const config = {
+        expenses: userExpenses,
+        defaultCurrency: defaultCurrency
+    };
+    localStorage.setItem('alex_expense_config', JSON.stringify(config));
+}
+
+function getExpenses() {
+    if (!userExpenses) {
+        loadExpenses();
+    }
+    return userExpenses;
+}
+
+// Settings Modal Management
+function openSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    renderExpenseList();
+    populateDefaultCurrencySelector();
+    initLucideIcons();
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function populateDefaultCurrencySelector() {
+    const selector = document.getElementById('default-currency-selector');
+    if (!selector) return;
+
+    selector.innerHTML = Object.values(CURRENCIES).map(c =>
+        `<option value="${c.code}">${c.code} - ${c.name}</option>`
+    ).join('');
+
+    selector.value = defaultCurrency;
+
+    selector.onchange = (e) => {
+        defaultCurrency = e.target.value;
+        saveExpenseConfig();
+        showToast(I18n.t('toast.defaultCurrencyChanged', { currency: CURRENCIES[defaultCurrency].name }), 'success');
+    };
+}
+
+function renderExpenseList() {
+    const list = document.getElementById('expense-list');
+    if (!list) return;
+
+    const expenses = getExpenses();
+
+    if (expenses.length === 0) {
+        list.innerHTML = `<p class="text-center text-slate-500 py-4">${I18n.t('history.noPayments')}</p>`;
+        return;
+    }
+
+    list.innerHTML = expenses.map(expense => {
+        const typeLabel = {
+            'recurring': I18n.t('settings.typeRecurring'),
+            'loan': I18n.t('settings.typeLoan'),
+            'goal': I18n.t('settings.typeGoal'),
+            'variable': I18n.t('settings.typeVariable')
+        }[expense.type] || expense.type;
+
+        return `
+            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                <span class="text-2xl">${expense.icon}</span>
+                <div class="flex-1 min-w-0">
+                    <div class="font-medium text-white truncate">${expense.name}</div>
+                    <div class="text-xs text-slate-400">${typeLabel} · ${getCurrencySymbol()}${formatCurrency(expense.amount)}</div>
+                </div>
+                <button onclick="editExpense('${expense.id}')" class="p-2 hover:bg-violet-500/20 rounded-lg transition-colors group" title="${I18n.t('settings.editExpense')}">
+                    <i data-lucide="pencil" class="w-4 h-4 text-slate-500 group-hover:text-violet-400"></i>
+                </button>
+                <button onclick="deleteExpense('${expense.id}')" class="p-2 hover:bg-red-500/20 rounded-lg transition-colors group" title="${I18n.t('settings.deleteExpense')}">
+                    <i data-lucide="trash-2" class="w-4 h-4 text-slate-500 group-hover:text-red-400"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
+
+    initLucideIcons();
+}
+
+// Expense Form Modal
+let editingExpenseId = null;
+
+function openExpenseForm(expenseId = null) {
+    editingExpenseId = expenseId;
+    const modal = document.getElementById('expense-form-modal');
+    const title = document.getElementById('expense-form-title');
+    const form = document.getElementById('expense-form');
+
+    // Reset form
+    form.reset();
+    document.getElementById('expense-edit-id').value = '';
+
+    if (expenseId) {
+        // Edit mode
+        title.textContent = I18n.t('settings.editExpense');
+        const expense = getExpenses().find(e => e.id === expenseId);
+        if (expense) {
+            document.getElementById('expense-edit-id').value = expense.id;
+            document.getElementById('expense-name').value = expense.name;
+            document.getElementById('expense-icon').value = expense.icon;
+            document.getElementById('expense-type').value = expense.type;
+            document.getElementById('expense-amount').value = expense.amount;
+            if (expense.dueDay) {
+                document.getElementById('expense-due-day').value = expense.dueDay;
+            }
+            if (expense.dueDate) {
+                const date = new Date(expense.dueDate);
+                document.getElementById('expense-due-date').value = date.toISOString().split('T')[0];
+            }
+            if (expense.totalPayments) {
+                document.getElementById('expense-total-payments').value = expense.totalPayments;
+            }
+        }
+    } else {
+        // Add mode
+        title.textContent = I18n.t('settings.addExpense');
+    }
+
+    updateExpenseFormFields();
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    initLucideIcons();
+}
+
+function closeExpenseForm() {
+    const modal = document.getElementById('expense-form-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    editingExpenseId = null;
+}
+
+function updateExpenseFormFields() {
+    const type = document.getElementById('expense-type').value;
+    const dueDayGroup = document.getElementById('due-day-group');
+    const dueDateGroup = document.getElementById('due-date-group');
+    const totalPaymentsGroup = document.getElementById('total-payments-group');
+
+    // Show/hide fields based on type
+    dueDayGroup.classList.toggle('hidden', type === 'goal');
+    dueDateGroup.classList.toggle('hidden', type !== 'goal');
+    totalPaymentsGroup.classList.toggle('hidden', type !== 'loan');
+
+    // Update required attributes
+    document.getElementById('expense-due-day').required = type !== 'goal';
+    document.getElementById('expense-due-date').required = type === 'goal';
+    document.getElementById('expense-total-payments').required = type === 'loan';
+}
+
+function handleExpenseFormSubmit(e) {
+    e.preventDefault();
+
+    const id = document.getElementById('expense-edit-id').value || 'exp_' + Date.now();
+    const name = document.getElementById('expense-name').value.trim();
+    const icon = document.getElementById('expense-icon').value.trim();
+    const type = document.getElementById('expense-type').value;
+    const amount = parseFloat(document.getElementById('expense-amount').value);
+
+    const expense = { id, name, icon, type, amount };
+
+    if (type === 'goal') {
+        const dueDateStr = document.getElementById('expense-due-date').value;
+        expense.dueDate = new Date(dueDateStr);
+    } else {
+        expense.dueDay = parseInt(document.getElementById('expense-due-day').value);
+    }
+
+    if (type === 'loan') {
+        expense.totalPayments = parseInt(document.getElementById('expense-total-payments').value);
+    }
+
+    // Update or add expense
+    const expenses = getExpenses();
+    const existingIndex = expenses.findIndex(e => e.id === id);
+    if (existingIndex >= 0) {
+        expenses[existingIndex] = expense;
+    } else {
+        expenses.push(expense);
+    }
+
+    userExpenses = expenses;
+    saveExpenseConfig();
+
+    closeExpenseForm();
+    renderExpenseList();
+    renderExpenseCards();
+    updateSummary();
+    showToast(I18n.t('toast.expenseSaved'), 'success');
+}
+
+function editExpense(expenseId) {
+    openExpenseForm(expenseId);
+}
+
+function deleteExpense(expenseId) {
+    if (!confirm(I18n.t('settings.confirmDelete'))) {
+        return;
+    }
+
+    userExpenses = getExpenses().filter(e => e.id !== expenseId);
+    saveExpenseConfig();
+
+    renderExpenseList();
+    renderExpenseCards();
+    updateSummary();
+    showToast(I18n.t('toast.expenseDeleted'), 'success');
+}
 
 // Language Management
 function initLanguage() {
@@ -1020,7 +1264,7 @@ function renderPaymentHistory() {
     const recentPayments = payments.slice(0, 10);
 
     recentPayments.forEach(payment => {
-        const expense = EXPENSES.find(e => e.id === payment.category);
+        const expense = getExpenses().find(e => e.id === payment.category);
         const li = document.createElement('li');
         li.className = 'flex items-center justify-between px-6 py-4 hover:bg-white/5 transition-colors';
 
@@ -1064,7 +1308,7 @@ function updateSummary() {
 
     // Calculate remaining amount to pay (including past due)
     let remainingAmount = 0;
-    EXPENSES.forEach(expense => {
+    getExpenses().forEach(expense => {
         // Skip goals
         if (expense.type === 'goal') return;
 
@@ -1106,7 +1350,7 @@ function updateSummary() {
     let hasPastDue = false;
     let pastDueExpense = null;
 
-    EXPENSES.forEach(expense => {
+    getExpenses().forEach(expense => {
         if (expense.type === 'goal') return;
 
         // For recurring expenses, check past due status
@@ -1162,7 +1406,7 @@ function updateSummary() {
 
 // Open payment modal
 function openPaymentModal(categoryId, defaultAmount = null, isSavings = false) {
-    const expense = EXPENSES.find(e => e.id === categoryId);
+    const expense = getExpenses().find(e => e.id === categoryId);
     if (!expense) return;
 
     document.getElementById('modal-title').textContent = isSavings
@@ -1231,7 +1475,7 @@ function handleEditPayment(paymentId) {
     const payment = payments.find(p => p.id === paymentId);
     if (!payment) return;
 
-    const expense = EXPENSES.find(e => e.id === payment.category);
+    const expense = getExpenses().find(e => e.id === payment.category);
 
     editingPaymentId = paymentId;
 
@@ -1268,7 +1512,7 @@ async function handlePaymentSubmit(e) {
     }
 
     // Validate goal payments don't exceed remaining balance (only for new payments)
-    const expense = EXPENSES.find(e => e.id === payment.category);
+    const expense = getExpenses().find(e => e.id === payment.category);
     if (!editingPaymentId && expense && expense.type === 'goal') {
         const totalSaved = getTotalPaymentsForCategory(expense.id);
         const remainingBalance = expense.amount - totalSaved;
@@ -1493,6 +1737,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add theme toggle listener
     document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
+
+    // Load user expenses from localStorage
+    loadExpenses();
+
+    // Initialize settings modal
+    document.getElementById('settings-btn')?.addEventListener('click', openSettingsModal);
+    document.getElementById('close-settings-modal')?.addEventListener('click', closeSettingsModal);
+    document.getElementById('settings-modal-backdrop')?.addEventListener('click', closeSettingsModal);
+    document.getElementById('add-expense-btn')?.addEventListener('click', () => openExpenseForm());
+
+    // Initialize expense form modal
+    document.getElementById('close-expense-form')?.addEventListener('click', closeExpenseForm);
+    document.getElementById('expense-form-backdrop')?.addEventListener('click', closeExpenseForm);
+    document.getElementById('expense-form')?.addEventListener('submit', handleExpenseFormSubmit);
+    document.getElementById('expense-type')?.addEventListener('change', updateExpenseFormFields);
 
     // Initialize sync status indicator
     initSyncIndicator();
