@@ -738,6 +738,35 @@ function checkInitialLockState() {
     }
 }
 
+// Sync cruise payments to the cruise-payment-tracker's localStorage
+function syncCruisePaymentsToTracker() {
+    try {
+        const cruisePayments = payments.filter(p => p.category === 'cruise');
+
+        const stored = localStorage.getItem('cruise-payments');
+        let trackerPayments = stored ? JSON.parse(stored) : [];
+
+        // Remove all alex entries (both seeded and previously synced)
+        trackerPayments = trackerPayments.filter(p => p.person !== 'alex');
+
+        // Add current cruise payments as alex entries
+        cruisePayments.forEach(p => {
+            trackerPayments.push({
+                id: 'sync_' + p.id,
+                person: 'alex',
+                amount: p.amount,
+                date: p.date,
+                note: p.notes || '',
+                source: 'alex-expense-tracker'
+            });
+        });
+
+        localStorage.setItem('cruise-payments', JSON.stringify(trackerPayments));
+    } catch (e) {
+        console.error('Error syncing cruise payments to tracker:', e);
+    }
+}
+
 // Initialize the app
 async function init() {
     showLoading(true);
@@ -745,6 +774,9 @@ async function init() {
     try {
         // Load payments from storage
         payments = await SheetsAPI.getPayments();
+
+        // Sync cruise payments to the cruise-payment-tracker
+        syncCruisePaymentsToTracker();
 
         // Render the UI
         renderExpenseCards();
@@ -1538,6 +1570,7 @@ async function handlePaymentSubmit(e) {
         }
 
         payments = await SheetsAPI.getPayments();
+        syncCruisePaymentsToTracker();
 
         renderExpenseCards();
         renderPaymentHistory();
@@ -1563,6 +1596,7 @@ async function handleDeletePayment(paymentId) {
     try {
         await SheetsAPI.deletePayment(paymentId);
         payments = await SheetsAPI.getPayments();
+        syncCruisePaymentsToTracker();
 
         renderExpenseCards();
         renderPaymentHistory();
@@ -1694,6 +1728,7 @@ async function handleBulkPaymentSubmit(e) {
 
         // Refresh payments data
         payments = await SheetsAPI.getPayments();
+        syncCruisePaymentsToTracker();
 
         renderExpenseCards();
         renderPaymentHistory();
