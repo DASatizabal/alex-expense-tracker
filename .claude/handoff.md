@@ -2,13 +2,22 @@
 
 > **START OF SESSION**: Read this file before proceeding. Also read without asking the following files: README.md, RESUME.md, and TODO.md for additional context.
 
+## ⚠️ CRITICAL: Version Bump Required for EVERY Change
+**EVERY commit MUST include a version bump. No exceptions.**
+- Patch bump (x.y.Z) for bug fixes
+- Minor bump (x.Y.0) for new features
+- Update version in: `js/config.js`, `README.md`, `RESUME.md`, `.claude/handoff.md`
+- Add version history entry in `RESUME.md`
+- See "Version Bump Protocol" section below for full details
+
 ## What We're Building
 Alex's Expense Tracker - a mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for persistent cloud storage. Single-user application designed for Alex's personal expense management.
 
 ## Current State
-**Version 2.10.2** - All core features complete and production-ready. Live at https://dasatizabal.github.io/alex-expense-tracker/
+**Version 2.11.0** - All core features complete and production-ready. Live at https://dasatizabal.github.io/alex-expense-tracker/
 
 Working features:
+- **Real-time currency conversion** - fetches live exchange rates from Open Exchange Rates API, converts amounts when display currency differs from default
 - **User admin panel** - settings gear icon, add/edit/delete expenses, default currency setting
 - **Variable expense type** - for bills that change monthly
 - **Internationalization (i18n)** - full translation system with English, Spanish, and Haitian Creole
