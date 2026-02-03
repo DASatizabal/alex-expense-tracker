@@ -1,6 +1,6 @@
 // Configuration for Alex's Expense Tracker
 
-const APP_VERSION = '2.10.0';
+const APP_VERSION = '2.10.1';
 
 // Supported currencies
 const CURRENCIES = {
