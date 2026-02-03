@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.9.0**
+**Current Version: 2.10.2**
 
 ## Quick Links
 
@@ -24,9 +24,11 @@ Data syncs to Google Sheets so it persists across devices.
 
 ---
 
-## Current State (January 2026)
+## Current State (February 2026)
 
 ### Working Features
+- **User admin panel** - settings gear icon, add/edit/delete expenses, default currency setting
+- **Variable expense type** - for bills that change monthly (e.g., Electric)
 - **Internationalization (i18n)** - full translation system with English, Spanish, and Haitian Creole
 - **Language selector** - switch languages with browser auto-detection and localStorage persistence
 - **Prominent remaining balance** - goal cards now show remaining amount prominently
@@ -83,7 +85,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.9.0'
+APP_VERSION: '2.10.2'
 ENCRYPTION: {
     ALGORITHM: 'AES-GCM',
     KEY_LENGTH: 256,
@@ -197,6 +199,9 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 
 | Version | Changes |
 |---------|---------|
+| v2.10.2 | **Bug fix**: Past due calculation no longer counts current month before due day has passed |
+| v2.10.1 | **Bug fix**: Main page now reflects expense settings changes (was using hardcoded defaults instead of user config) |
+| v2.10.0 | **User admin panel**: Settings gear icon, add/edit/delete expense cards, default currency setting, variable expense type |
 | v2.9.0 | **Internationalization (i18n)**: Full translation system with English, Spanish, Haitian Creole; language selector with browser auto-detection; prominent remaining balance display on goal cards |
 | v2.8.0 | **Offline indicator, Edit payment, CSV export**: Sync status indicator, edit existing payments, export to CSV button |
 | v2.7.0 | **Currency selector**: 10 currencies (USD, EUR, GBP, CAD, AUD, MXN, JPY, INR, BRL, CHF) with localStorage persistence |
@@ -248,3 +253,6 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 10. Added currency selector (v2.7.0) with 10 currencies
 11. Added sync indicator, edit payment, CSV export (v2.8.0)
 12. Added internationalization with Spanish and Haitian Creole (v2.9.0)
+13. Added user admin panel with expense management (v2.10.0)
+14. Fixed main page not reflecting settings changes (v2.10.1)
+15. Fixed past due calculation counting current month before due day (v2.10.2)
