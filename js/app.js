@@ -874,8 +874,10 @@ function getCreditOrPastDue(expense) {
     const startYear = 2026;
     const startMonth = 0; // January
 
-    // Calculate months elapsed (Jan 2026 = month 1)
-    const monthsElapsed = (today.getFullYear() - startYear) * 12 + (today.getMonth() - startMonth) + 1;
+    // Calculate months where payment is expected (only count current month if due day has passed)
+    const fullMonthsElapsed = (today.getFullYear() - startYear) * 12 + (today.getMonth() - startMonth);
+    const dueDayPassedThisMonth = today.getDate() >= (expense.dueDay || 1);
+    const monthsElapsed = fullMonthsElapsed + (dueDayPassedThisMonth ? 1 : 0);
 
     // Expected total based on months elapsed
     const expectedTotal = monthsElapsed * expense.amount;
