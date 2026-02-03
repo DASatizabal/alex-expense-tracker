@@ -27,6 +27,11 @@ const CONFIG = {
         AUTO_LOCK_MINUTES: 5
     },
 
+    // Exchange rate API (Open Exchange Rates)
+    EXCHANGE_RATE_URL: 'https://openexchangerates.org/api/latest.json',
+    EXCHANGE_RATE_API_KEY: '4df6530bf55348d8a952d0c4c4e4ccd2',
+    EXCHANGE_RATE_CACHE_HOURS: 6,  // Refresh rates every 6 hours
+
     // Google Apps Script URL
     // To set up:
     // 1. Create a Google Sheet with a "Payments" tab

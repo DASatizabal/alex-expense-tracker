@@ -203,7 +203,15 @@ const I18n = {
             'ordinal.st': 'st',
             'ordinal.nd': 'nd',
             'ordinal.rd': 'rd',
-            'ordinal.th': 'th'
+            'ordinal.th': 'th',
+
+            // Exchange rates
+            'rates.lastUpdated': 'Rates: {{date}}',
+            'rates.offline': 'Rates: Cached',
+            'rates.unavailable': 'Rates unavailable',
+            'toast.ratesFetched': 'Exchange rates updated',
+            'toast.ratesFetchFailed': 'Using cached exchange rates',
+            'tooltip.rateStatus': 'Exchange rates last updated'
         },
 
         // Spanish translations
@@ -398,7 +406,15 @@ const I18n = {
             'ordinal.st': 'º',
             'ordinal.nd': 'º',
             'ordinal.rd': 'º',
-            'ordinal.th': 'º'
+            'ordinal.th': 'º',
+
+            // Exchange rates
+            'rates.lastUpdated': 'Tasas: {{date}}',
+            'rates.offline': 'Tasas: En caché',
+            'rates.unavailable': 'Tasas no disponibles',
+            'toast.ratesFetched': 'Tasas de cambio actualizadas',
+            'toast.ratesFetchFailed': 'Usando tasas de cambio en caché',
+            'tooltip.rateStatus': 'Última actualización de tasas'
         },
 
         // Haitian Creole translations
@@ -593,7 +609,15 @@ const I18n = {
             'ordinal.st': 'ye',
             'ordinal.nd': 'yèm',
             'ordinal.rd': 'yèm',
-            'ordinal.th': 'yèm'
+            'ordinal.th': 'yèm',
+
+            // Exchange rates
+            'rates.lastUpdated': 'To: {{date}}',
+            'rates.offline': 'To: Anrejistreman',
+            'rates.unavailable': 'To pa disponib',
+            'toast.ratesFetched': 'To echanj mete ajou',
+            'toast.ratesFetchFailed': 'Sèvi ak to echanj anrejistre',
+            'tooltip.rateStatus': 'Dènye miz ajou to echanj'
         }
     },
 

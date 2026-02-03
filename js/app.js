@@ -35,6 +35,162 @@ function updateThemeIcon(isDark) {
 let currentCurrency = DEFAULT_CURRENCY;
 let defaultCurrency = DEFAULT_CURRENCY;
 
+// Currency Converter Module - handles exchange rate fetching and conversion
+const CurrencyConverter = {
+    rates: null,           // { base: 'USD', rates: { EUR: 0.92, ... } }
+    lastFetch: null,       // Timestamp of last successful fetch
+    STORAGE_KEY: 'alex_exchange_rates',
+
+    /**
+     * Fetch exchange rates from Open Exchange Rates API
+     * Caches rates to localStorage with timestamp
+     */
+    async fetchRates() {
+        // Check if API key is configured
+        if (!CONFIG.EXCHANGE_RATE_API_KEY || CONFIG.EXCHANGE_RATE_API_KEY === 'YOUR_API_KEY_HERE') {
+            console.warn('Exchange rate API key not configured');
+            this.loadFromCache();
+            return false;
+        }
+
+        // Skip fetch if rates are still fresh
+        if (!this.shouldRefresh()) {
+            return true;
+        }
+
+        try {
+            const url = `${CONFIG.EXCHANGE_RATE_URL}?app_id=${CONFIG.EXCHANGE_RATE_API_KEY}`;
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            // Store rates in memory and localStorage
+            this.rates = {
+                base: data.base,
+                rates: data.rates
+            };
+            this.lastFetch = Date.now();
+
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify({
+                base: data.base,
+                rates: data.rates,
+                timestamp: this.lastFetch
+            }));
+
+            return true;
+        } catch (error) {
+            console.error('Failed to fetch exchange rates:', error);
+            // Fall back to cached rates
+            this.loadFromCache();
+            return false;
+        }
+    },
+
+    /**
+     * Load rates from localStorage cache
+     */
+    loadFromCache() {
+        try {
+            const cached = localStorage.getItem(this.STORAGE_KEY);
+            if (cached) {
+                const data = JSON.parse(cached);
+                this.rates = {
+                    base: data.base,
+                    rates: data.rates
+                };
+                this.lastFetch = data.timestamp;
+                return true;
+            }
+        } catch (error) {
+            console.error('Failed to load cached rates:', error);
+        }
+        return false;
+    },
+
+    /**
+     * Get current rates (from memory or cache)
+     */
+    getRates() {
+        if (!this.rates) {
+            this.loadFromCache();
+        }
+        return this.rates;
+    },
+
+    /**
+     * Convert amount from one currency to another
+     * Open Exchange Rates free tier uses USD as base, so all conversions go through USD
+     * @param {number} amount - Amount to convert
+     * @param {string} fromCurrency - Source currency code
+     * @param {string} toCurrency - Target currency code
+     * @returns {number|null} - Converted amount or null if rates unavailable
+     */
+    convert(amount, fromCurrency, toCurrency) {
+        if (fromCurrency === toCurrency) {
+            return amount;
+        }
+
+        const rates = this.getRates();
+        if (!rates || !rates.rates) {
+            return null;
+        }
+
+        // Open Exchange Rates uses USD as base
+        // To convert: amount * (rates[toCurrency] / rates[fromCurrency])
+        const fromRate = fromCurrency === 'USD' ? 1 : rates.rates[fromCurrency];
+        const toRate = toCurrency === 'USD' ? 1 : rates.rates[toCurrency];
+
+        if (!fromRate || !toRate) {
+            return null;
+        }
+
+        return amount * (toRate / fromRate);
+    },
+
+    /**
+     * Check if rates should be refreshed (older than cache duration)
+     */
+    shouldRefresh() {
+        if (!this.lastFetch) {
+            this.loadFromCache();
+        }
+
+        if (!this.lastFetch) {
+            return true;
+        }
+
+        const cacheMs = (CONFIG.EXCHANGE_RATE_CACHE_HOURS || 6) * 60 * 60 * 1000;
+        return (Date.now() - this.lastFetch) > cacheMs;
+    },
+
+    /**
+     * Get formatted date string of last successful fetch
+     */
+    getLastFetchTime() {
+        if (!this.lastFetch) {
+            this.loadFromCache();
+        }
+
+        if (!this.lastFetch) {
+            return null;
+        }
+
+        const date = new Date(this.lastFetch);
+        return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    },
+
+    /**
+     * Check if rates are available (either fresh or cached)
+     */
+    hasRates() {
+        return this.getRates() !== null;
+    }
+};
+
 // Expense Management - load from localStorage or use defaults
 let userExpenses = null;
 
@@ -104,9 +260,22 @@ function populateDefaultCurrencySelector() {
 
     selector.value = defaultCurrency;
 
-    selector.onchange = (e) => {
+    selector.onchange = async (e) => {
         defaultCurrency = e.target.value;
         saveExpenseConfig();
+
+        // Refresh rates since base currency changed
+        if (currentCurrency !== defaultCurrency) {
+            await CurrencyConverter.fetchRates();
+        }
+        updateRateStatus();
+
+        // Re-render to reflect new default currency
+        renderExpenseCards();
+        renderPaymentHistory();
+        updateSummary();
+        renderExpenseList();
+
         showToast(I18n.t('toast.defaultCurrencyChanged', { currency: CURRENCIES[defaultCurrency].name }), 'success');
     };
 }
@@ -325,9 +494,16 @@ function initCurrency() {
     selector.value = currentCurrency;
 
     // Handle changes
-    selector.addEventListener('change', (e) => {
+    selector.addEventListener('change', async (e) => {
         currentCurrency = e.target.value;
         localStorage.setItem('alex_expense_currency', currentCurrency);
+
+        // Fetch exchange rates if switching to a different currency
+        if (currentCurrency !== defaultCurrency) {
+            await CurrencyConverter.fetchRates();
+        }
+
+        updateRateStatus();
         renderExpenseCards();
         renderPaymentHistory();
         updateSummary();
@@ -399,6 +575,42 @@ function updateSyncIndicator(status, lastSync) {
 
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
+    }
+}
+
+// Update exchange rate status indicator
+function updateRateStatus() {
+    const indicator = document.getElementById('rate-status');
+    if (!indicator) return;
+
+    // Only show rate status when display currency differs from default
+    if (currentCurrency === defaultCurrency) {
+        indicator.classList.add('hidden');
+        return;
+    }
+
+    indicator.classList.remove('hidden');
+
+    const lastFetchTime = CurrencyConverter.getLastFetchTime();
+    const hasRates = CurrencyConverter.hasRates();
+
+    if (!hasRates) {
+        indicator.textContent = I18n.t('rates.unavailable');
+        indicator.title = I18n.t('rates.unavailable');
+        indicator.classList.add('text-red-400');
+        indicator.classList.remove('text-slate-500', 'text-emerald-400');
+    } else if (CurrencyConverter.shouldRefresh()) {
+        // Rates are cached but stale
+        indicator.textContent = I18n.t('rates.offline');
+        indicator.title = I18n.t('tooltip.rateStatus');
+        indicator.classList.add('text-slate-500');
+        indicator.classList.remove('text-red-400', 'text-emerald-400');
+    } else {
+        // Fresh rates
+        indicator.textContent = I18n.t('rates.lastUpdated', { date: lastFetchTime });
+        indicator.title = I18n.t('tooltip.rateStatus');
+        indicator.classList.add('text-emerald-400');
+        indicator.classList.remove('text-red-400', 'text-slate-500');
     }
 }
 
@@ -778,6 +990,23 @@ async function init() {
         // Sync cruise payments to the cruise-payment-tracker
         syncCruisePaymentsToTracker();
 
+        // Fetch exchange rates (non-blocking, shows cached if fails)
+        const ratesFetched = await CurrencyConverter.fetchRates();
+        if (ratesFetched && CurrencyConverter.hasRates() && !CurrencyConverter.shouldRefresh()) {
+            // Only show toast if rates were freshly fetched (not from cache)
+            if (currentCurrency !== defaultCurrency) {
+                showToast(I18n.t('toast.ratesFetched'), 'info');
+            }
+        } else if (!ratesFetched && CurrencyConverter.hasRates()) {
+            // Using cached rates
+            if (currentCurrency !== defaultCurrency) {
+                showToast(I18n.t('toast.ratesFetchFailed'), 'info');
+            }
+        }
+
+        // Update rate status indicator
+        updateRateStatus();
+
         // Render the UI
         renderExpenseCards();
         renderPaymentHistory();
@@ -827,6 +1056,15 @@ function getTodayDateString() {
 
 // Format currency with comma separators (hide .00 cents)
 function formatCurrency(amount, includeSymbol = false) {
+    // Convert from default currency to display currency if they differ
+    if (currentCurrency !== defaultCurrency) {
+        const converted = CurrencyConverter.convert(amount, defaultCurrency, currentCurrency);
+        if (converted !== null) {
+            amount = converted;
+        }
+        // If conversion fails, show unconverted amount (user sees default currency amount)
+    }
+
     const currency = CURRENCIES[currentCurrency] || CURRENCIES.USD;
     const hasCents = amount % 1 !== 0;
 
