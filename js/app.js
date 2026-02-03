@@ -1011,7 +1011,7 @@ function getSortedExpenses() {
     const today = new Date();
     const currentDay = today.getDate();
 
-    return [...EXPENSES].sort((a, b) => {
+    return [...getExpenses()].sort((a, b) => {
         // Get paid status for each expense
         const statusA = getExpenseStatus(a);
         const statusB = getExpenseStatus(b);
