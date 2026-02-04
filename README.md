@@ -1,6 +1,6 @@
 # Alex's Expense Tracker
 
-**Version 2.11.0** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
+**Version 2.12.0** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
 
 A modern, mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for cloud storage.
 
@@ -13,6 +13,8 @@ A modern, mobile-friendly web app for tracking recurring expenses, loan payments
 - **Visual Status** - Color-coded cards show paid, due soon, overdue, and pending items
 - **Smart Sorting** - Unpaid items first, sorted by due date and amount
 - **Payment History** - View and delete recent payments with dates and notes
+- **Google OAuth** - Sign in with Google via Firebase Authentication
+- **Per-User Data** - Each user's data is isolated with their own Google Sheet
 - **Cloud Sync** - Data stored in Google Sheets via Apps Script backend
 - **Offline Fallback** - Works with localStorage when offline
 - **Installable PWA** - Add to home screen, works offline with service worker caching
@@ -56,10 +58,10 @@ alex-expense-tracker/
 ├── css/
 │   └── styles.css          # Custom styling (animations, scrollbars)
 ├── js/
-│   ├── config.js           # Configuration (expenses, API URL, version)
-│   ├── encryption.js       # Password protection (AES-GCM, PBKDF2)
+│   ├── config.js           # Configuration (expenses, API URL, Firebase, version)
+│   ├── firebase-auth.js    # Google OAuth via Firebase Authentication
 │   ├── i18n.js             # Internationalization (English, Spanish, Haitian Creole)
-│   ├── sheets-api.js       # API layer (cloud + localStorage)
+│   ├── sheets-api.js       # API layer (cloud + localStorage, per-user)
 │   └── app.js              # Main application logic
 ├── icons/                  # PWA icons (192x192, 512x512, maskable)
 ├── README.md               # This file

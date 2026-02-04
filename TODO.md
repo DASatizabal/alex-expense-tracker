@@ -14,7 +14,7 @@ Transform this single-user expense tracker into a **multi-tenant personal financ
 | Feature | Implementation | Notes |
 |---------|---------------|-------|
 | **Simple PIN/Password** | localStorage encrypted with Web Crypto API | ✅ **DONE v2.4.0** - AES-GCM + PBKDF2 |
-| **Google OAuth** | Firebase Auth or Supabase | Free tier handles thousands of users |
+| **Google OAuth** | Firebase Auth or Supabase | ✅ **DONE v2.12.0** - Firebase Auth with Google Sign-In |
 | **Session timeout** | Auto-lock after X minutes of inactivity | ✅ **DONE v2.4.0** - 5 min auto-lock |
 | **Data encryption** | Encrypt localStorage payload | ✅ **DONE v2.4.0** - Full encryption |
 
@@ -638,7 +638,7 @@ NOW (Week 1-2)
 
 SHORT-TERM (Month 1-2)
 ├── [x] Real-time currency conversion (v2.11.0)
-├── [ ] Google OAuth
+├── [x] Google OAuth (v2.12.0)
 ├── [ ] Onboarding wizard
 ├── [ ] 3-5 user templates
 ├── [ ] Expanded expense types
@@ -695,10 +695,10 @@ alex-expense-tracker/
 ├── css/
 │   └── styles.css          # Custom styling
 ├── js/
-│   ├── config.js           # Configuration (expenses, API URL)
-│   ├── encryption.js       # Password protection (AES-GCM, PBKDF2)
+│   ├── config.js           # Configuration (expenses, Firebase, auth roles)
+│   ├── firebase-auth.js    # Google OAuth via Firebase Authentication
 │   ├── i18n.js             # Internationalization (EN, ES, HT)
-│   ├── sheets-api.js       # API layer (cloud + localStorage)
+│   ├── sheets-api.js       # API layer (cloud + localStorage, per-user)
 │   └── app.js              # Main application logic
 ├── README.md
 ├── SETUP.md

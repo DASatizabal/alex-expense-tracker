@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.11.0**
+**Current Version: 2.12.0**
 
 ## Quick Links
 
@@ -39,8 +39,9 @@ Data syncs to Google Sheets so it persists across devices.
 - **Currency selector** - 10 currencies (USD, EUR, GBP, etc.) with localStorage persistence
 - **PWA support** - installable app with service worker for offline caching
 - **Dark/Light theme toggle** with system preference detection and localStorage persistence
-- **Password protection** with AES-GCM encryption (Web Crypto API)
-- **Auto-lock** after 5 minutes of inactivity (manual lock button available)
+- **Google OAuth** via Firebase Authentication (Google Sign-In)
+- **Per-user data isolation** with user-configurable Google Sheets URL
+- **Admin access** for master account to view all users' data
 - Dark/light glassmorphism UI with Tailwind CSS and Lucide icons
 - Expense cards with status indicators (paid, due soon, overdue, pending)
 - Single payment modal with custom amounts and notes
@@ -68,11 +69,11 @@ alex-expense-tracker/
 ├── google-apps-script.js   # Backend (copy to Google Apps Script)
 ├── css/styles.css          # Styling
 ├── js/
-│   ├── config.js           # Settings + expense definitions + encryption config
-│   ├── encryption.js       # Web Crypto API (AES-GCM, PBKDF2) for passwords
+│   ├── config.js           # Settings + expense definitions + Firebase config + auth roles
+│   ├── firebase-auth.js    # Google OAuth via Firebase Authentication
 │   ├── i18n.js             # Internationalization (English, Spanish, Haitian Creole)
-│   ├── sheets-api.js       # API layer (cloud + localStorage + session cache)
-│   └── app.js              # UI logic + password protection flow
+│   ├── sheets-api.js       # API layer (cloud + localStorage + per-user storage)
+│   └── app.js              # UI logic + Firebase auth flow
 ├── icons/                  # PWA icons (192, 512, maskable)
 ├── README.md               # Full documentation
 ├── SETUP.md                # Google Sheets setup guide
@@ -86,14 +87,13 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.11.0'
-ENCRYPTION: {
-    ALGORITHM: 'AES-GCM',
-    KEY_LENGTH: 256,
-    PBKDF2_ITERATIONS: 100000,
-    AUTO_LOCK_MINUTES: 5
+APP_VERSION: '2.12.0'
+FIREBASE_CONFIG: { apiKey, authDomain, projectId, ... }
+AUTH_ROLES: {
+    PRIMARY_USER: 'lalexcubilla@gmail.com',
+    ADMINS: ['dasatizabal@gmail.com']
 }
-APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwQI_sZ76ZvFCXOdndlyhvI0U2UR3CXdJo_m_1NlCuDAUPS26sYyzzLOl7ZIyKCf_aa/exec'
+APPS_SCRIPT_URL: 'https://script.google.com/macros/s/...'
 USE_LOCAL_STORAGE: false  // true = offline only, false = sync to Sheets
 ```
 
@@ -200,6 +200,7 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 
 | Version | Changes |
 |---------|---------|
+| v2.12.0 | **Google OAuth**: Firebase Auth with Google Sign-In replaces PIN/password, per-user data isolation, admin access for master account, user-configurable Google Sheets URL |
 | v2.11.0 | **Real-time currency conversion**: Fetches live exchange rates from Open Exchange Rates API, converts amounts when display currency differs from default, caches rates for 6 hours, shows rate status indicator |
 | v2.10.2 | **Bug fix**: Past due calculation no longer counts current month before due day has passed |
 | v2.10.1 | **Bug fix**: Main page now reflects expense settings changes (was using hardcoded defaults instead of user config) |
@@ -259,3 +260,4 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 14. Fixed main page not reflecting settings changes (v2.10.1)
 15. Fixed past due calculation counting current month before due day (v2.10.2)
 16. Added real-time currency conversion with Open Exchange Rates API (v2.11.0)
+17. Replaced PIN/password with Google OAuth via Firebase Authentication (v2.12.0)
