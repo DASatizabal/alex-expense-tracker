@@ -802,6 +802,21 @@ async function handleSignedIn(user) {
     // Update user info display
     updateUserDisplay(user);
 
+    // Known users (primary + admin) skip setup and use the default Google Sheet
+    if (FirebaseAuth.isKnownUser()) {
+        // Mark as initialized
+        localStorage.setItem(FirebaseAuth.getUserStoragePrefix() + 'alex_expense_initialized', 'true');
+
+        // Show admin user switcher if admin
+        if (FirebaseAuth.isAdmin()) {
+            showAdminUserSwitcher();
+        }
+
+        await init();
+        showToast(I18n.t('toast.welcomeBack'), 'success');
+        return;
+    }
+
     // Check if this is a new user (first sign-in)
     const isNewUser = !localStorage.getItem(FirebaseAuth.getUserStoragePrefix() + 'alex_expense_initialized');
 
@@ -917,6 +932,56 @@ async function handleSetupContinue() {
     setTimeout(() => {
         openSettingsModal();
     }, 500);
+}
+
+// ============ Admin User Switcher ============
+
+// Show admin user switcher in the header
+function showAdminUserSwitcher() {
+    // Only show for admins
+    if (!FirebaseAuth.isAdmin()) return;
+
+    // Check if switcher already exists
+    if (document.getElementById('admin-user-switcher')) return;
+
+    const allUsers = FirebaseAuth.getAllUserPrefixes();
+
+    // Only show if there are other users to switch to
+    if (allUsers.length <= 1) return;
+
+    const switcher = document.createElement('select');
+    switcher.id = 'admin-user-switcher';
+    switcher.className = 'px-2 py-1.5 text-xs bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 hover:border-amber-500/50 focus:outline-none focus:border-amber-500 cursor-pointer transition-colors';
+    switcher.title = 'Switch user view (Admin)';
+
+    switcher.innerHTML = allUsers.map(u =>
+        `<option value="${u.prefix}">${u.label}</option>`
+    ).join('');
+
+    // Set current value
+    switcher.value = FirebaseAuth.getViewingUserPrefix() || '';
+
+    switcher.addEventListener('change', async (e) => {
+        const prefix = e.target.value;
+        FirebaseAuth.setViewingUser(prefix === '' ? null : prefix);
+
+        // Reload data for the selected user
+        userExpenses = null; // Reset cached expenses
+        loadExpenses();
+        payments = await SheetsAPI.getPayments();
+        renderExpenseCards();
+        renderPaymentHistory();
+        updateSummary();
+
+        const label = allUsers.find(u => u.prefix === prefix)?.label || 'Unknown';
+        showToast(`Viewing: ${label}`, 'info');
+    });
+
+    // Insert before sign-out button
+    const signOutButton = document.getElementById('sign-out-btn');
+    if (signOutButton) {
+        signOutButton.parentNode.insertBefore(switcher, signOutButton);
+    }
 }
 
 // Initialize Firebase and check auth state

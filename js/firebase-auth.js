@@ -200,13 +200,93 @@ const FirebaseAuth = {
     },
 
     /**
+     * Check if current user is the primary user
+     * @returns {boolean}
+     */
+    isPrimaryUser() {
+        const email = this.getUserEmail();
+        return email && email === AUTH_ROLES.PRIMARY_USER;
+    },
+
+    /**
+     * Check if current user is an admin
+     * @returns {boolean}
+     */
+    isAdmin() {
+        const email = this.getUserEmail();
+        return email && AUTH_ROLES.ADMINS.includes(email);
+    },
+
+    /**
+     * Check if current user is a known user (primary or admin)
+     * Known users skip the setup wizard and use the default Google Sheet
+     * @returns {boolean}
+     */
+    isKnownUser() {
+        return this.isPrimaryUser() || this.isAdmin();
+    },
+
+    /**
+     * For admin: currently viewed user's storage prefix
+     * Allows admin to switch between users' data
+     */
+    _viewingUserPrefix: null,
+
+    /**
+     * Set which user's data the admin is viewing
+     * @param {string|null} prefix - User storage prefix, or null for own data
+     */
+    setViewingUser(prefix) {
+        this._viewingUserPrefix = prefix;
+    },
+
+    /**
+     * Get the currently viewed user prefix (for admin switching)
+     * @returns {string|null}
+     */
+    getViewingUserPrefix() {
+        return this._viewingUserPrefix;
+    },
+
+    /**
      * Get storage key prefix for current user
-     * Used to isolate localStorage data per user
+     * Admins viewing another user get that user's prefix
+     * Primary user and admins use no prefix (shared default data)
      * @returns {string}
      */
     getUserStoragePrefix() {
+        // If admin is viewing a specific user, use that prefix
+        if (this.isAdmin() && this._viewingUserPrefix !== null) {
+            return this._viewingUserPrefix;
+        }
+
+        // Known users (primary + admin) share the default storage (no prefix)
+        if (this.isKnownUser()) {
+            return '';
+        }
+
+        // Other users get isolated storage
         const uid = this.getUserId();
         return uid ? `user_${uid}_` : '';
+    },
+
+    /**
+     * Get all user prefixes stored in localStorage (for admin user switcher)
+     * @returns {Array<{prefix: string, label: string}>}
+     */
+    getAllUserPrefixes() {
+        const prefixes = new Set();
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            const match = key.match(/^(user_[^_]+_)/);
+            if (match) {
+                prefixes.add(match[1]);
+            }
+        }
+        return [
+            { prefix: '', label: 'Primary (Alex)' },
+            ...[...prefixes].map(p => ({ prefix: p, label: p.replace(/_$/, '') }))
+        ];
     },
 
     /**

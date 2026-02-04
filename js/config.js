@@ -10,6 +10,14 @@ const APP_VERSION = '2.12.0';
 // 4. Add authorized domain: your-github-username.github.io
 // 5. Get config: Project settings > Your apps > Add web app
 // 6. Copy the firebaseConfig values below
+// Auth roles
+// Primary user: uses the default Google Sheet, skips setup wizard
+// Admin: can access any user's data via a user switcher
+const AUTH_ROLES = {
+    PRIMARY_USER: 'lalexcubilla@gmail.com',
+    ADMINS: ['dasatizabal@gmail.com']
+};
+
 const FIREBASE_CONFIG = {
     apiKey: "AIzaSyDOzBQ3vMaeIDgfqtDIjTGs7uwUreEsY40",
     authDomain: "alexexpensetracker.firebaseapp.com",
