@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.12.3**
+**Current Version: 2.12.4**
 
 ## Quick Links
 
@@ -87,7 +87,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.12.3'
+APP_VERSION: '2.12.4'
 FIREBASE_CONFIG: { apiKey, authDomain, projectId, ... }
 AUTH_ROLES: {
     PRIMARY_USER: 'lalexcubilla@gmail.com',
@@ -200,6 +200,7 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 
 | Version | Changes |
 |---------|---------|
+| v2.12.4 | Fix header overlapping with top controls bar on mobile |
 | v2.12.3 | Add favicon, always show admin switcher, hide unknown UIDs from dropdown |
 | v2.12.0 | **Google OAuth**: Firebase Auth with Google Sign-In replaces PIN/password, per-user data isolation, admin access for master account, user-configurable Google Sheets URL |
 | v2.11.0 | **Real-time currency conversion**: Fetches live exchange rates from Open Exchange Rates API, converts amounts when display currency differs from default, caches rates for 6 hours, shows rate status indicator |

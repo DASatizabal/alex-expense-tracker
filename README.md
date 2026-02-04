@@ -1,6 +1,6 @@
 # Alex's Expense Tracker
 
-**Version 2.12.3** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
+**Version 2.12.4** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
 
 A modern, mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for cloud storage.
 
