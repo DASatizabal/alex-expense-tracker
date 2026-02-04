@@ -946,9 +946,6 @@ function showAdminUserSwitcher() {
 
     const allUsers = FirebaseAuth.getAllUserPrefixes();
 
-    // Only show if there are other users to switch to
-    if (allUsers.length <= 1) return;
-
     const switcher = document.createElement('select');
     switcher.id = 'admin-user-switcher';
     switcher.className = 'px-2 py-1.5 text-xs bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 hover:border-amber-500/50 focus:outline-none focus:border-amber-500 cursor-pointer transition-colors';
