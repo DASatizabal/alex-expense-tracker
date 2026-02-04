@@ -2,6 +2,7 @@
 
 // Theme Management
 function initTheme() {
+    // Theme is global (not user-scoped) for instant loading before auth
     const savedTheme = localStorage.getItem('alex_expense_theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -194,8 +195,17 @@ const CurrencyConverter = {
 // Expense Management - load from localStorage or use defaults
 let userExpenses = null;
 
+// Get user-scoped storage key
+function getUserStorageKey(key) {
+    if (typeof FirebaseAuth !== 'undefined' && FirebaseAuth.isSignedIn()) {
+        return FirebaseAuth.getUserStoragePrefix() + key;
+    }
+    return key;
+}
+
 function loadExpenses() {
-    const saved = localStorage.getItem('alex_expense_config');
+    const storageKey = getUserStorageKey('alex_expense_config');
+    const saved = localStorage.getItem(storageKey);
     if (saved) {
         try {
             const config = JSON.parse(saved);
@@ -213,8 +223,29 @@ function loadExpenses() {
             userExpenses = [...EXPENSES];
         }
     } else {
-        // First time - use default expenses from config.js
-        userExpenses = [...EXPENSES];
+        // Check for legacy unscoped key (migration)
+        const legacySaved = localStorage.getItem('alex_expense_config');
+        if (legacySaved) {
+            try {
+                const config = JSON.parse(legacySaved);
+                userExpenses = config.expenses || [];
+                defaultCurrency = config.defaultCurrency || DEFAULT_CURRENCY;
+                userExpenses = userExpenses.map(e => {
+                    if (e.type === 'goal' && e.dueDate) {
+                        e.dueDate = new Date(e.dueDate);
+                    }
+                    return e;
+                });
+                // Save to user-scoped key
+                saveExpenseConfig();
+            } catch (e) {
+                console.error('Error loading legacy expense config:', e);
+                userExpenses = [...EXPENSES];
+            }
+        } else {
+            // First time - use default expenses from config.js
+            userExpenses = [...EXPENSES];
+        }
     }
     return userExpenses;
 }
@@ -224,7 +255,8 @@ function saveExpenseConfig() {
         expenses: userExpenses,
         defaultCurrency: defaultCurrency
     };
-    localStorage.setItem('alex_expense_config', JSON.stringify(config));
+    const storageKey = getUserStorageKey('alex_expense_config');
+    localStorage.setItem(storageKey, JSON.stringify(config));
 }
 
 function getExpenses() {
@@ -241,7 +273,34 @@ function openSettingsModal() {
     modal.classList.add('flex');
     renderExpenseList();
     populateDefaultCurrencySelector();
+    populateSheetsUrlInput();
     initLucideIcons();
+}
+
+// Populate and handle Sheets URL input
+function populateSheetsUrlInput() {
+    const input = document.getElementById('sheets-url-input');
+    if (!input) return;
+
+    // Load current URL
+    const currentUrl = SheetsAPI.getUserAppsScriptUrl();
+    input.value = currentUrl || '';
+
+    // Handle changes with debounce
+    let debounceTimer;
+    input.onchange = () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            const newUrl = input.value.trim();
+            SheetsAPI.setUserAppsScriptUrl(newUrl);
+
+            if (newUrl) {
+                showToast(I18n.t('toast.sheetsUrlSaved'), 'success');
+            } else {
+                showToast(I18n.t('toast.sheetsUrlCleared'), 'info');
+            }
+        }, 500);
+    };
 }
 
 function closeSettingsModal() {
@@ -636,27 +695,18 @@ let bulkPaymentForm;
 let closeBulkModalBtn;
 let expenseCheckboxList;
 
-// Password Protection DOM Elements (initialized after DOM ready)
-let passwordModal;
-let passwordForm;
-let passwordInput;
-let confirmPasswordInput;
-let confirmPasswordGroup;
-let passwordModalTitle;
-let passwordModalSubtitle;
-let passwordSubmitBtn;
-let forgotPasswordContainer;
-let forgotPasswordBtn;
-let resetModal;
-let cancelResetBtn;
-let confirmResetBtn;
-let lockBtn;
-
-// Password Protection State
-let passwordMode = 'unlock'; // 'unlock' or 'setup'
-let wrongPasswordCount = 0;
-let lastActivityTime = Date.now();
-let inactivityCheckInterval = null;
+// Auth DOM Elements (initialized after DOM ready)
+let authModal;
+let googleSignInBtn;
+let authError;
+let authErrorText;
+let userInfo;
+let userAvatar;
+let userName;
+let signOutBtn;
+let setupModal;
+let setupLaterBtn;
+let setupContinueBtn;
 
 // Toast notification system
 function showToast(message, type = 'success') {
@@ -690,263 +740,224 @@ function initLucideIcons() {
     }
 }
 
-// ============ Password Protection Functions ============
+// ============ Firebase Auth Functions ============
 
-// Show password modal in unlock or setup mode
-function showPasswordModal(mode) {
-    passwordMode = mode;
-    wrongPasswordCount = 0;
+// Show auth modal (Google Sign-In)
+function showAuthModal() {
+    if (!authModal) return;
 
-    // Reset form
-    passwordInput.value = '';
-    confirmPasswordInput.value = '';
-    forgotPasswordContainer.classList.add('hidden');
-
-    if (mode === 'setup') {
-        passwordModalTitle.textContent = I18n.t('modal.createPassword');
-        passwordModalSubtitle.textContent = I18n.t('modal.createPasswordSubtitle');
-        passwordSubmitBtn.textContent = I18n.t('button.createPassword');
-        confirmPasswordGroup.classList.remove('hidden');
-        confirmPasswordInput.required = true;
-    } else {
-        passwordModalTitle.textContent = I18n.t('modal.unlockApp');
-        passwordModalSubtitle.textContent = I18n.t('modal.unlockSubtitle');
-        passwordSubmitBtn.textContent = I18n.t('button.unlock');
-        confirmPasswordGroup.classList.add('hidden');
-        confirmPasswordInput.required = false;
-    }
-
-    passwordModal.classList.remove('hidden');
-    passwordModal.classList.add('flex');
+    hideAuthError();
+    authModal.classList.remove('hidden');
+    authModal.classList.add('flex');
     initLucideIcons();
-
-    // Focus password input
-    setTimeout(() => passwordInput.focus(), 100);
 }
 
-// Hide password modal
-function hidePasswordModal() {
-    passwordModal.classList.add('hidden');
-    passwordModal.classList.remove('flex');
+// Hide auth modal
+function hideAuthModal() {
+    if (!authModal) return;
+    authModal.classList.add('hidden');
+    authModal.classList.remove('flex');
 }
 
-// Handle password form submission
-async function handlePasswordSubmit(e) {
-    e.preventDefault();
-
-    const password = passwordInput.value;
-
-    if (passwordMode === 'setup') {
-        await handleSetup(password);
-    } else {
-        await handleUnlock(password);
-    }
+// Show auth error message
+function showAuthError(message) {
+    if (!authError || !authErrorText) return;
+    authErrorText.textContent = message;
+    authError.classList.remove('hidden');
 }
 
-// Handle password setup (first time)
-async function handleSetup(password) {
-    const confirmPassword = confirmPasswordInput.value;
+// Hide auth error message
+function hideAuthError() {
+    if (!authError) return;
+    authError.classList.add('hidden');
+}
 
-    // Validate password
-    if (password.length < 4) {
-        showToast(I18n.t('toast.passwordTooShort'), 'error');
-        return;
-    }
-
-    if (password !== confirmPassword) {
-        showToast(I18n.t('toast.passwordsMismatch'), 'error');
-        return;
-    }
-
+// Handle Google Sign-In button click
+async function handleGoogleSignIn() {
+    hideAuthError();
     showLoading(true);
 
     try {
-        // Hash and store password
-        const { hash, salt } = await Encryption.hashPassword(password);
-        Encryption.storePasswordHash(hash, salt);
+        const user = await FirebaseAuth.signIn();
 
-        // Migrate existing unencrypted data
-        await Encryption.migrateToEncrypted(password);
-
-        // Get payments (either migrated or empty)
-        const encryptedData = Encryption.getEncryptedData();
-        let decryptedPayments = [];
-
-        if (encryptedData) {
-            decryptedPayments = await Encryption.decrypt(encryptedData, password);
+        if (user) {
+            hideAuthModal();
+            await handleSignedIn(user);
         }
-
-        // Set up session
-        SheetsAPI.setSession(decryptedPayments, password);
-
-        hidePasswordModal();
-        startInactivityTracking();
-        await init();
-
-        showToast(I18n.t('toast.passwordCreated'), 'success');
     } catch (error) {
-        console.error('Setup error:', error);
-        showToast(I18n.t('toast.setupFailed'), 'error');
+        console.error('Sign-in error:', error);
+
+        if (error.message === 'popup-blocked') {
+            showAuthError(I18n.t('auth.popupBlocked'));
+        } else {
+            showAuthError(I18n.t('auth.signInFailed'));
+        }
     } finally {
         showLoading(false);
     }
 }
 
-// Handle password unlock
-async function handleUnlock(password) {
-    showLoading(true);
+// Handle successful sign-in
+async function handleSignedIn(user) {
+    // Update user info display
+    updateUserDisplay(user);
 
-    try {
-        // Verify password
-        const credentials = Encryption.getStoredCredentials();
-        if (!credentials) {
-            showToast(I18n.t('toast.noPasswordFound'), 'error');
-            showLoading(false);
-            return;
-        }
+    // Check if this is a new user (first sign-in)
+    const isNewUser = !localStorage.getItem(FirebaseAuth.getUserStoragePrefix() + 'alex_expense_initialized');
 
-        const isValid = await Encryption.verifyPassword(password, credentials.hash, credentials.salt);
-
-        if (!isValid) {
-            wrongPasswordCount++;
-            showLoading(false);
-
-            // Show forgot password after 3 attempts
-            if (wrongPasswordCount >= 3) {
-                forgotPasswordContainer.classList.remove('hidden');
-            }
-
-            showToast(I18n.t('toast.incorrectPassword'), 'error');
-            passwordInput.value = '';
-            passwordInput.focus();
-            return;
-        }
-
-        // Decrypt data
-        const encryptedData = Encryption.getEncryptedData();
-        let decryptedPayments = [];
-
-        if (encryptedData) {
-            decryptedPayments = await Encryption.decrypt(encryptedData, password);
-        }
-
-        // Set up session
-        SheetsAPI.setSession(decryptedPayments, password);
-
-        hidePasswordModal();
-        startInactivityTracking();
+    if (isNewUser) {
+        // Show setup modal for new users
+        showSetupModal(user);
+    } else {
+        // Existing user, initialize app
         await init();
-
         showToast(I18n.t('toast.welcomeBack'), 'success');
-    } catch (error) {
-        console.error('Unlock error:', error);
-        wrongPasswordCount++;
+    }
+}
 
-        if (wrongPasswordCount >= 3) {
-            forgotPasswordContainer.classList.remove('hidden');
+// Update user display in header
+function updateUserDisplay(user) {
+    if (!userInfo) return;
+
+    if (user) {
+        userInfo.classList.remove('hidden');
+        userInfo.classList.add('flex');
+
+        if (userAvatar) {
+            const photoURL = FirebaseAuth.getUserPhotoURL();
+            if (photoURL) {
+                userAvatar.src = photoURL;
+                userAvatar.classList.remove('hidden');
+            } else {
+                userAvatar.classList.add('hidden');
+            }
         }
 
-        showToast(I18n.t('toast.incorrectPassword'), 'error');
-        passwordInput.value = '';
-        passwordInput.focus();
+        if (userName) {
+            userName.textContent = FirebaseAuth.getUserFirstName();
+        }
+    } else {
+        userInfo.classList.add('hidden');
+        userInfo.classList.remove('flex');
+    }
+}
+
+// Handle sign out
+async function handleSignOut() {
+    showLoading(true);
+
+    try {
+        await FirebaseAuth.signOut();
+        payments = [];
+
+        // Clear UI
+        expensesContainer.innerHTML = '';
+        paymentHistory.innerHTML = '';
+        monthlyTotalEl.textContent = `${getCurrencySymbol()}0`;
+        nextDueEl.textContent = '-';
+
+        // Update user display
+        updateUserDisplay(null);
+
+        // Show auth modal
+        showAuthModal();
+
+        showToast(I18n.t('toast.signedOut'), 'info');
+    } catch (error) {
+        console.error('Sign-out error:', error);
+        showToast(I18n.t('auth.signOutFailed'), 'error');
     } finally {
         showLoading(false);
     }
 }
 
-// Lock the app
-function lockApp() {
-    // Clear session
-    SheetsAPI.clearSession();
-    payments = [];
+// Show setup modal for new users
+function showSetupModal(user) {
+    if (!setupModal) return;
 
-    // Stop inactivity tracking
-    stopInactivityTracking();
+    // Set greeting with user's name
+    const setupGreeting = document.getElementById('setup-user-greeting');
+    if (setupGreeting) {
+        setupGreeting.textContent = I18n.t('setup.greeting', { name: FirebaseAuth.getUserFirstName() });
+    }
 
-    // Clear UI
-    expensesContainer.innerHTML = '';
-    paymentHistory.innerHTML = '';
-    monthlyTotalEl.textContent = `${getCurrencySymbol()}0`;
-    nextDueEl.textContent = '-';
-
-    // Show password modal
-    showPasswordModal('unlock');
-}
-
-// Reset app data (forgot password)
-function resetApp() {
-    Encryption.clearAllData();
-    SheetsAPI.clearSession();
-    payments = [];
-
-    hideResetModal();
-    hidePasswordModal();
-
-    // Show setup modal
-    showPasswordModal('setup');
-    showToast(I18n.t('toast.dataCleared'), 'info');
-}
-
-// Show reset confirmation modal
-function showResetModal() {
-    resetModal.classList.remove('hidden');
-    resetModal.classList.add('flex');
+    setupModal.classList.remove('hidden');
+    setupModal.classList.add('flex');
     initLucideIcons();
 }
 
-// Hide reset confirmation modal
-function hideResetModal() {
-    resetModal.classList.add('hidden');
-    resetModal.classList.remove('flex');
+// Hide setup modal
+function hideSetupModal() {
+    if (!setupModal) return;
+    setupModal.classList.add('hidden');
+    setupModal.classList.remove('flex');
 }
 
-// ============ Inactivity Tracking ============
+// Handle "Setup Later" - continue without sheet setup
+async function handleSetupLater() {
+    hideSetupModal();
 
-// Update last activity time
-function updateActivity() {
-    lastActivityTime = Date.now();
+    // Mark user as initialized
+    localStorage.setItem(FirebaseAuth.getUserStoragePrefix() + 'alex_expense_initialized', 'true');
+
+    await init();
+    showToast(I18n.t('setup.usingOffline'), 'info');
 }
 
-// Start inactivity tracking
-function startInactivityTracking() {
-    // Track user interactions
-    document.addEventListener('click', updateActivity);
-    document.addEventListener('keypress', updateActivity);
-    document.addEventListener('scroll', updateActivity);
-    document.addEventListener('mousemove', updateActivity);
-    document.addEventListener('touchstart', updateActivity);
+// Handle "Continue" - open settings for sheet URL
+async function handleSetupContinue() {
+    hideSetupModal();
 
-    // Check for inactivity every 30 seconds
-    inactivityCheckInterval = setInterval(() => {
-        const idleMinutes = (Date.now() - lastActivityTime) / (1000 * 60);
-        if (idleMinutes >= CONFIG.ENCRYPTION.AUTO_LOCK_MINUTES) {
-            lockApp();
-        }
-    }, 30000);
+    // Mark user as initialized
+    localStorage.setItem(FirebaseAuth.getUserStoragePrefix() + 'alex_expense_initialized', 'true');
+
+    await init();
+
+    // Open settings modal so user can configure their sheet
+    setTimeout(() => {
+        openSettingsModal();
+    }, 500);
 }
 
-// Stop inactivity tracking
-function stopInactivityTracking() {
-    document.removeEventListener('click', updateActivity);
-    document.removeEventListener('keypress', updateActivity);
-    document.removeEventListener('scroll', updateActivity);
-    document.removeEventListener('mousemove', updateActivity);
-    document.removeEventListener('touchstart', updateActivity);
-
-    if (inactivityCheckInterval) {
-        clearInterval(inactivityCheckInterval);
-        inactivityCheckInterval = null;
+// Initialize Firebase and check auth state
+async function initFirebaseAuth() {
+    // Check if Firebase is configured
+    if (!FirebaseAuth.isConfigured()) {
+        console.log('Firebase not configured. Running in demo/offline mode.');
+        // In demo mode, just show the app without auth
+        await init();
+        return;
     }
-}
 
-// Check if app should start locked
-function checkInitialLockState() {
-    if (Encryption.isPasswordSet()) {
-        // Password exists, show unlock modal
-        showPasswordModal('unlock');
-    } else {
-        // No password, show setup modal
-        showPasswordModal('setup');
+    showLoading(true);
+
+    try {
+        // Initialize Firebase
+        const initialized = await FirebaseAuth.init();
+
+        if (!initialized) {
+            console.warn('Firebase initialization failed. Running in offline mode.');
+            await init();
+            return;
+        }
+
+        // Wait for auth state to be determined
+        const user = await FirebaseAuth.waitForAuthState();
+
+        if (user) {
+            // User is already signed in
+            hideAuthModal();
+            await handleSignedIn(user);
+        } else {
+            // No user, show sign-in modal
+            showAuthModal();
+        }
+    } catch (error) {
+        console.error('Firebase auth initialization error:', error);
+        // Fall back to offline mode
+        await init();
+    } finally {
+        showLoading(false);
     }
 }
 
@@ -2044,21 +2055,18 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBulkModalBtn = document.getElementById('close-bulk-modal');
     expenseCheckboxList = document.getElementById('expense-checkbox-list');
 
-    // Initialize password protection DOM elements
-    passwordModal = document.getElementById('password-modal');
-    passwordForm = document.getElementById('password-form');
-    passwordInput = document.getElementById('password-input');
-    confirmPasswordInput = document.getElementById('confirm-password-input');
-    confirmPasswordGroup = document.getElementById('confirm-password-group');
-    passwordModalTitle = document.getElementById('password-modal-title');
-    passwordModalSubtitle = document.getElementById('password-modal-subtitle');
-    passwordSubmitBtn = document.getElementById('password-submit-btn');
-    forgotPasswordContainer = document.getElementById('forgot-password-container');
-    forgotPasswordBtn = document.getElementById('forgot-password-btn');
-    resetModal = document.getElementById('reset-modal');
-    cancelResetBtn = document.getElementById('cancel-reset-btn');
-    confirmResetBtn = document.getElementById('confirm-reset-btn');
-    lockBtn = document.getElementById('lock-btn');
+    // Initialize Firebase auth DOM elements
+    authModal = document.getElementById('auth-modal');
+    googleSignInBtn = document.getElementById('google-sign-in-btn');
+    authError = document.getElementById('auth-error');
+    authErrorText = document.getElementById('auth-error-text');
+    userInfo = document.getElementById('user-info');
+    userAvatar = document.getElementById('user-avatar');
+    userName = document.getElementById('user-name');
+    signOutBtn = document.getElementById('sign-out-btn');
+    setupModal = document.getElementById('setup-modal');
+    setupLaterBtn = document.getElementById('setup-later-btn');
+    setupContinueBtn = document.getElementById('setup-continue-btn');
 
     // Set up bulk payment event listeners
     if (bulkPaymentBtn) {
@@ -2078,21 +2086,18 @@ document.addEventListener('DOMContentLoaded', () => {
         bulkPaymentForm.addEventListener('submit', handleBulkPaymentSubmit);
     }
 
-    // Set up password protection event listeners
-    if (passwordForm) {
-        passwordForm.addEventListener('submit', handlePasswordSubmit);
+    // Set up Firebase auth event listeners
+    if (googleSignInBtn) {
+        googleSignInBtn.addEventListener('click', handleGoogleSignIn);
     }
-    if (forgotPasswordBtn) {
-        forgotPasswordBtn.addEventListener('click', showResetModal);
+    if (signOutBtn) {
+        signOutBtn.addEventListener('click', handleSignOut);
     }
-    if (cancelResetBtn) {
-        cancelResetBtn.addEventListener('click', hideResetModal);
+    if (setupLaterBtn) {
+        setupLaterBtn.addEventListener('click', handleSetupLater);
     }
-    if (confirmResetBtn) {
-        confirmResetBtn.addEventListener('click', resetApp);
-    }
-    if (lockBtn) {
-        lockBtn.addEventListener('click', lockApp);
+    if (setupContinueBtn) {
+        setupContinueBtn.addEventListener('click', handleSetupContinue);
     }
 
     // Auto-select amount fields on focus (event delegation for dynamic inputs)
@@ -2105,9 +2110,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Lucide icons
     initLucideIcons();
 
-    // Display version (do this before password check)
+    // Display version
     document.getElementById('version-tag').textContent = 'v' + APP_VERSION;
 
-    // Check password state and show appropriate modal
-    checkInitialLockState();
+    // Initialize Firebase auth and check sign-in state
+    initFirebaseAuth();
 });

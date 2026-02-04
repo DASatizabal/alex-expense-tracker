@@ -1,9 +1,8 @@
 // Google Apps Script API integration with localStorage fallback
 
 const SheetsAPI = {
-    // Session cache for decrypted data (only in memory, never in localStorage)
+    // Session cache for payments data (in memory)
     _sessionCache: null,
-    _sessionPassword: null,
 
     // Sync status: 'synced', 'offline', 'syncing', 'error'
     _syncStatus: 'synced',
@@ -29,10 +28,49 @@ const SheetsAPI = {
         return { status: this._syncStatus, lastSync: this._lastSyncTime };
     },
 
-    // Check if Apps Script is configured
+    // Check if Apps Script is configured (either global or user-specific)
     isConfigured() {
-        return CONFIG.APPS_SCRIPT_URL &&
-               CONFIG.APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE';
+        const userUrl = this.getUserAppsScriptUrl();
+        return (userUrl && userUrl !== '') ||
+               (CONFIG.APPS_SCRIPT_URL && CONFIG.APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE');
+    },
+
+    // Get user-specific Apps Script URL (if configured)
+    getUserAppsScriptUrl() {
+        const prefix = this._getStoragePrefix();
+        return localStorage.getItem(prefix + 'apps_script_url') || '';
+    },
+
+    // Set user-specific Apps Script URL
+    setUserAppsScriptUrl(url) {
+        const prefix = this._getStoragePrefix();
+        if (url) {
+            localStorage.setItem(prefix + 'apps_script_url', url);
+        } else {
+            localStorage.removeItem(prefix + 'apps_script_url');
+        }
+    },
+
+    // Get the active Apps Script URL (user-specific takes priority over global)
+    getActiveAppsScriptUrl() {
+        const userUrl = this.getUserAppsScriptUrl();
+        if (userUrl && userUrl !== '') {
+            return userUrl;
+        }
+        return CONFIG.APPS_SCRIPT_URL;
+    },
+
+    // Get storage key prefix (user-specific if signed in)
+    _getStoragePrefix() {
+        if (typeof FirebaseAuth !== 'undefined' && FirebaseAuth.isSignedIn()) {
+            return FirebaseAuth.getUserStoragePrefix();
+        }
+        return '';
+    },
+
+    // Get user-scoped localStorage key
+    _getStorageKey(key) {
+        return this._getStoragePrefix() + key;
     },
 
     // Get all payments from storage
@@ -56,7 +94,8 @@ const SheetsAPI = {
     async getPaymentsFromSheets() {
         this._setSyncStatus('syncing');
         try {
-            const response = await fetch(CONFIG.APPS_SCRIPT_URL);
+            const url = this.getActiveAppsScriptUrl();
+            const response = await fetch(url);
 
             if (!response.ok) {
                 throw new Error('Failed to fetch from Apps Script');
@@ -85,8 +124,9 @@ const SheetsAPI = {
             payment.id = this.generateId();
             payment.timestamp = new Date().toISOString();
 
+            const url = this.getActiveAppsScriptUrl();
             // Use text/plain to avoid CORS preflight (Apps Script limitation)
-            const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'text/plain'
@@ -116,8 +156,9 @@ const SheetsAPI = {
 
     async deletePaymentFromSheets(paymentId) {
         try {
+            const url = this.getActiveAppsScriptUrl();
             // Use text/plain to avoid CORS preflight (Apps Script limitation)
-            const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'text/plain'
@@ -144,26 +185,19 @@ const SheetsAPI = {
 
     // ============ Session Management ============
 
-    // Set session with decrypted data and password
-    setSession(payments, password) {
+    // Set session with payments data
+    setSession(payments) {
         this._sessionCache = payments;
-        this._sessionPassword = password;
     },
 
-    // Clear session (for locking)
+    // Clear session
     clearSession() {
         this._sessionCache = null;
-        this._sessionPassword = null;
     },
 
     // Check if session is active
     hasSession() {
-        return this._sessionCache !== null && this._sessionPassword !== null;
-    },
-
-    // Get session password (for re-encryption)
-    getSessionPassword() {
-        return this._sessionPassword;
+        return this._sessionCache !== null;
     },
 
     // ============ LocalStorage Methods ============
@@ -174,18 +208,36 @@ const SheetsAPI = {
             return this._sessionCache;
         }
 
-        // Check for unencrypted data (backwards compatibility)
-        const unencrypted = localStorage.getItem('alex_expense_payments');
-        if (unencrypted) {
+        // Try user-scoped key first
+        const userKey = this._getStorageKey('alex_expense_payments');
+        const userData = localStorage.getItem(userKey);
+        if (userData) {
             try {
-                return JSON.parse(unencrypted);
+                const payments = JSON.parse(userData);
+                this._sessionCache = payments;
+                return payments;
             } catch (e) {
-                console.error('Error parsing localStorage:', e);
-                return [];
+                console.error('Error parsing user localStorage:', e);
             }
         }
 
-        // No session and no unencrypted data
+        // Fall back to legacy unscoped key (for migration)
+        const legacyData = localStorage.getItem('alex_expense_payments');
+        if (legacyData) {
+            try {
+                const payments = JSON.parse(legacyData);
+                // Migrate to user-scoped key if signed in
+                if (this._getStoragePrefix()) {
+                    this._savePaymentsToStorage(payments);
+                    // Don't delete legacy data in case other users need it
+                }
+                this._sessionCache = payments;
+                return payments;
+            } catch (e) {
+                console.error('Error parsing legacy localStorage:', e);
+            }
+        }
+
         return [];
     },
 
@@ -201,26 +253,22 @@ const SheetsAPI = {
         // Sort by date, newest first
         payments.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        // Update session cache
+        // Update session cache and save to localStorage
         this._sessionCache = payments;
-
-        // Encrypt and save to localStorage
-        await this._saveEncryptedPayments(payments);
+        this._savePaymentsToStorage(payments);
 
         return payment;
     },
 
     // Add payment to localStorage without generating new ID (for syncing from cloud)
-    async addToLocalStorage(payment) {
+    addToLocalStorage(payment) {
         const payments = this.getPaymentsFromLocalStorage();
         payments.push(payment);
         payments.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        // Update session cache
+        // Update session cache and save to localStorage
         this._sessionCache = payments;
-
-        // Encrypt and save to localStorage
-        await this._saveEncryptedPayments(payments);
+        this._savePaymentsToStorage(payments);
     },
 
     // Delete a payment
@@ -232,11 +280,9 @@ const SheetsAPI = {
         const payments = this.getPaymentsFromLocalStorage();
         const filtered = payments.filter(p => p.id !== paymentId);
 
-        // Update session cache
+        // Update session cache and save to localStorage
         this._sessionCache = filtered;
-
-        // Encrypt and save to localStorage
-        await this._saveEncryptedPayments(filtered);
+        this._savePaymentsToStorage(filtered);
     },
 
     // Update an existing payment
@@ -252,18 +298,17 @@ const SheetsAPI = {
             payments.sort((a, b) => new Date(b.date) - new Date(a.date));
         }
 
-        // Update session cache
+        // Update session cache and save to localStorage
         this._sessionCache = payments;
-
-        // Encrypt and save to localStorage
-        await this._saveEncryptedPayments(payments);
+        this._savePaymentsToStorage(payments);
         return payments[index];
     },
 
     async updatePaymentInSheets(paymentId, updates) {
         this._setSyncStatus('syncing');
         try {
-            const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
+            const url = this.getActiveAppsScriptUrl();
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'text/plain'
@@ -291,18 +336,16 @@ const SheetsAPI = {
         }
     },
 
-    // Internal: Save encrypted payments to localStorage
-    async _saveEncryptedPayments(payments) {
-        if (this._sessionPassword) {
-            const encrypted = await Encryption.encrypt(payments, this._sessionPassword);
-            Encryption.storeEncryptedData(encrypted);
-        }
+    // Internal: Save payments to localStorage (user-scoped)
+    _savePaymentsToStorage(payments) {
+        const key = this._getStorageKey('alex_expense_payments');
+        localStorage.setItem(key, JSON.stringify(payments));
     },
 
-    // Clear all payments (use with caution)
+    // Clear all payments for current user (use with caution)
     clearAllPayments() {
-        localStorage.removeItem('alex_expense_payments');
-        Encryption.clearAllData();
+        const key = this._getStorageKey('alex_expense_payments');
+        localStorage.removeItem(key);
         this.clearSession();
     },
 

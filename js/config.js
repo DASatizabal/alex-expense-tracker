@@ -1,6 +1,23 @@
 // Configuration for Alex's Expense Tracker
 
-const APP_VERSION = '2.11.0';
+const APP_VERSION = '2.12.0';
+
+// Firebase Configuration
+// To set up:
+// 1. Go to https://console.firebase.google.com
+// 2. Create new project: "alex-expense-tracker"
+// 3. Enable Google Auth: Authentication > Sign-in method > Google > Enable
+// 4. Add authorized domain: your-github-username.github.io
+// 5. Get config: Project settings > Your apps > Add web app
+// 6. Copy the firebaseConfig values below
+const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDOzBQ3vMaeIDgfqtDIjTGs7uwUreEsY40",
+    authDomain: "alexexpensetracker.firebaseapp.com",
+    projectId: "alexexpensetracker",
+    storageBucket: "alexexpensetracker.firebasestorage.app",
+    messagingSenderId: "559944565083",
+    appId: "1:559944565083:web:e173c14c9714b4933dda7e"
+};
 
 // Supported currencies
 const CURRENCIES = {
@@ -19,13 +36,6 @@ const CURRENCIES = {
 const DEFAULT_CURRENCY = 'USD';
 
 const CONFIG = {
-    // Encryption settings for password protection
-    ENCRYPTION: {
-        ALGORITHM: 'AES-GCM',
-        KEY_LENGTH: 256,
-        PBKDF2_ITERATIONS: 100000,
-        AUTO_LOCK_MINUTES: 5
-    },
 
     // Exchange rate API (Open Exchange Rates)
     EXCHANGE_RATE_URL: 'https://openexchangerates.org/api/latest.json',
