@@ -271,22 +271,34 @@ const FirebaseAuth = {
     },
 
     /**
-     * Get all user prefixes stored in localStorage (for admin user switcher)
+     * Get all known user prefixes for the admin user switcher
+     * Only shows Primary (Alex) — unknown UIDs are excluded
      * @returns {Array<{prefix: string, label: string}>}
      */
     getAllUserPrefixes() {
-        const prefixes = new Set();
+        return [
+            { prefix: '', label: 'Primary (Alex)' }
+        ];
+    },
+
+    /**
+     * Remove all localStorage keys for a given user prefix
+     * @param {string} prefix - User storage prefix to clear
+     * @returns {number} Number of keys removed
+     */
+    clearUserData(prefix) {
+        if (!prefix) return 0;
+
+        const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            const match = key.match(/^(user_[^_]+_)/);
-            if (match) {
-                prefixes.add(match[1]);
+            if (key.startsWith(prefix)) {
+                keysToRemove.push(key);
             }
         }
-        return [
-            { prefix: '', label: 'Primary (Alex)' },
-            ...[...prefixes].map(p => ({ prefix: p, label: p.replace(/_$/, '') }))
-        ];
+
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        return keysToRemove.length;
     },
 
     /**
