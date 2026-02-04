@@ -1,6 +1,6 @@
 // Configuration for Alex's Expense Tracker
 
-const APP_VERSION = '2.12.0';
+const APP_VERSION = '2.12.3';
 
 // Firebase Configuration
 // To set up:
