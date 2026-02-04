@@ -32,7 +32,7 @@ Transform this single-user expense tracker into a **multi-tenant personal financ
 - [x] **Admin link in header** — Settings/gear icon next to lock button ✅ **DONE v2.10.0**
 - [x] **Expense management** — Add, edit, delete expense cards (stored in localStorage) ✅ **DONE v2.10.0**
 - [x] **Default currency setting** — Choose base currency for all expenses ✅ **DONE v2.10.0**
-- [ ] **Real-time currency conversion** — Convert amounts using previous day's exchange rates
+- [x] **Real-time currency conversion** — Convert amounts using previous day's exchange rates ✅ **DONE v2.11.0** - Open Exchange Rates API with 6hr cache
 
 **Currency Conversion Implementation:**
 ```javascript
@@ -637,7 +637,7 @@ NOW (Week 1-2)
 └── [x] User admin panel (v2.10.0)
 
 SHORT-TERM (Month 1-2)
-├── [ ] Real-time currency conversion (previous day's exchange rates)
+├── [x] Real-time currency conversion (v2.11.0)
 ├── [ ] Google OAuth
 ├── [ ] Onboarding wizard
 ├── [ ] 3-5 user templates
@@ -707,4 +707,4 @@ alex-expense-tracker/
 
 ---
 
-*Last updated: January 2026*
+*Last updated: February 2026*
