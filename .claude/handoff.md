@@ -144,6 +144,7 @@ When user says "I'm done for now":
 2. Push to GitHub (triggers deployment)
 3. Verify live site updated if needed
 4. Update TODO.md if priorities changed
+5. Update, commit, and push all relevant docs as needed
 
 ## Quick Reference
 
