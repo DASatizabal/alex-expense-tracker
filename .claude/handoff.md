@@ -14,7 +14,7 @@
 Alex's Expense Tracker - a mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for persistent cloud storage. Single-user application designed for Alex's personal expense management.
 
 ## Current State
-**Version 2.11.0** - All core features complete and production-ready. Live at https://dasatizabal.github.io/alex-expense-tracker/
+**Version 2.12.4** - Google OAuth via Firebase, per-user data isolation, admin access. Live at https://dasatizabal.github.io/alex-expense-tracker/
 
 Working features:
 - **Real-time currency conversion** - fetches live exchange rates from Open Exchange Rates API, converts amounts when display currency differs from default
