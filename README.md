@@ -1,6 +1,6 @@
 # Alex's Expense Tracker
 
-**Version 2.12.4** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
+**Version 2.13.0** | [Live Site](https://dasatizabal.github.io/alex-expense-tracker/)
 
 A modern, mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for cloud storage.
 
@@ -14,7 +14,7 @@ A modern, mobile-friendly web app for tracking recurring expenses, loan payments
 - **Smart Sorting** - Unpaid items first, sorted by due date and amount
 - **Payment History** - View and delete recent payments with dates and notes
 - **Google OAuth** - Sign in with Google via Firebase Authentication
-- **Per-User Data** - Each user's data is isolated with their own Google Sheet
+- **Multi-Tenant Storage** - Centralized Apps Script auto-provisions per-user tabs (no setup needed)
 - **Cloud Sync** - Data stored in Google Sheets via Apps Script backend
 - **Offline Fallback** - Works with localStorage when offline
 - **Installable PWA** - Add to home screen, works offline with service worker caching

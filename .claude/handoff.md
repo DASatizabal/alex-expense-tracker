@@ -14,9 +14,11 @@
 Alex's Expense Tracker - a mobile-friendly web app for tracking recurring expenses, loan payments, and savings goals. Features a dark glassmorphism UI and syncs with Google Sheets for persistent cloud storage. Single-user application designed for Alex's personal expense management.
 
 ## Current State
-**Version 2.12.4** - Google OAuth via Firebase, per-user data isolation, admin access. Live at https://dasatizabal.github.io/alex-expense-tracker/
+**Version 2.13.0** - Multi-tenant centralized Apps Script with auto-provisioned per-user storage. Live at https://dasatizabal.github.io/alex-expense-tracker/
 
 Working features:
+- **Multi-tenant Apps Script** - centralized backend auto-provisions per-user storage tabs, no setup wizard needed
+- **Google OAuth** - Firebase Authentication with Google Sign-In, admin access for master account
 - **Real-time currency conversion** - fetches live exchange rates from Open Exchange Rates API, converts amounts when display currency differs from default
 - **User admin panel** - settings gear icon, add/edit/delete expenses, default currency setting
 - **Variable expense type** - for bills that change monthly
@@ -29,8 +31,6 @@ Working features:
 - **Currency selector** - 10 currencies (USD, EUR, GBP, etc.) with localStorage persistence
 - **PWA support** - installable app with service worker for offline caching
 - **Dark/Light theme toggle** with localStorage persistence and system preference detection
-- **Password protection** with AES-GCM encryption (Web Crypto API)
-- **Auto-lock** after 5 minutes of inactivity
 - Recurring expenses with credit/past due tracking
 - Loan payments with progress tracking (X of Y payments)
 - Savings goals with per-paycheck breakdowns

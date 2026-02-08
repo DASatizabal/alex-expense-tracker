@@ -84,24 +84,21 @@ const CurrencyConverter = {
 ## 📍 Phase 2: Multi-User & Templates (2-4 weeks)
 *Enable scaling to multiple users*
 
-### Multi-Tenant Architecture
+### Multi-Tenant Architecture ✅ DONE (v2.13.0)
+
+Implemented centralized Apps Script with auto-provisioned per-user tabs:
 
 ```
-Current:  Browser → Google Sheet (single user)
-Future:   Browser → Auth → API → User's Sheet OR shared DB
+Current:  Browser → Firebase Auth → Centralized Apps Script → user_{uid} tab
 ```
 
-**Option A: Google Sheets per user**
-- Each user gets their own Sheet (created on signup)
-- Pros: Free, users own their data
-- Cons: Harder to manage, slower
-
-**Option B: Centralized database**
-- Supabase/Firebase/PlanetScale
-- Pros: Fast, easier analytics, real multi-tenancy
-- Cons: Hosting costs, you hold user data
-
-**Recommendation:** Start with Option A for privacy-conscious users, offer Option B as "premium cloud sync"
+**Implementation:**
+- Single Apps Script deployment handles all users
+- Each non-known user gets their own tab (`user_{firebase_uid}`)
+- Known users (primary + admin) share the default "Payments" tab
+- No setup wizard needed - tabs are auto-created on first sign-in
+- `action=init` endpoint provisions new user storage
+- All API calls include `userId` parameter for routing
 
 ### User Template System
 
@@ -180,6 +177,80 @@ Future:   Browser → Auth → API → User's Sheet OR shared DB
 │  Next due: Rent in 3 days               │
 │  [Go to Dashboard]                      │
 └─────────────────────────────────────────┘
+```
+
+---
+
+## 🔥 Firestore Migration (Medium-Term)
+*Move from Google Sheets backend to Firebase Firestore for better scalability*
+
+### Why Migrate to Firestore
+
+| Current (Sheets) | Future (Firestore) |
+|------------------|-------------------|
+| API quota limits bottleneck at scale | Designed for high read/write volume |
+| Manual localStorage fallback | Built-in offline persistence |
+| Tab-based isolation (fragile) | Security rules enforce per-user isolation |
+| Apps Script deployment/maintenance | Serverless, no deployment needed |
+| Separate auth + data services | Already using Firebase Auth |
+
+### Architecture
+
+```javascript
+// Firestore collection structure
+users/{uid}/payments/{paymentId}
+users/{uid}/settings/{key}
+
+// Security rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
+
+### Free Tier (Firebase Spark)
+- 1 GB storage
+- 50,000 reads/day
+- 20,000 writes/day
+- More than enough for hundreds of users
+
+### Migration Steps
+
+1. **Add Firestore SDK** to index.html (already have Firebase SDK loaded)
+2. **Create security rules** in Firebase Console
+3. **Add Firestore methods** inside sheets-api.js (behind feature flag `USE_FIRESTORE`)
+4. **Migrate existing data** - one-time script to copy Sheets data to Firestore
+5. **Switch feature flag** - set `USE_FIRESTORE: true` in config.js
+6. **Deprecate Apps Script** - remove google-apps-script.js dependency
+7. **Clean up** - remove Sheets-specific code from sheets-api.js
+
+### Implementation Notes
+
+```javascript
+// sheets-api.js with Firestore support
+const SheetsAPI = {
+    async getPayments() {
+        if (CONFIG.USE_FIRESTORE) {
+            return this.getPaymentsFromFirestore();
+        }
+        // ... existing Sheets logic
+    },
+
+    async getPaymentsFromFirestore() {
+        const uid = FirebaseAuth.getUserId();
+        const snapshot = await firebase.firestore()
+            .collection('users').doc(uid)
+            .collection('payments')
+            .orderBy('date', 'desc')
+            .get();
+
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+};
 ```
 
 ---
@@ -639,13 +710,13 @@ NOW (Week 1-2)
 SHORT-TERM (Month 1-2)
 ├── [x] Real-time currency conversion (v2.11.0)
 ├── [x] Google OAuth (v2.12.0)
-├── [ ] Onboarding wizard
+├── [x] Multi-tenant centralized Apps Script (v2.13.0)
 ├── [ ] 3-5 user templates
 ├── [ ] Expanded expense types
 └── [ ] n8n webhook integration
 
 MEDIUM-TERM (Month 3-4)
-├── [ ] Multi-user (each user → own Sheet)
+├── [ ] Firestore migration (replace Sheets backend)
 ├── [ ] Push notifications (web)
 ├── [ ] Mobile app v1 (Capacitor wrap)
 ├── [ ] Basic analytics dashboard

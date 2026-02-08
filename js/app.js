@@ -273,34 +273,7 @@ function openSettingsModal() {
     modal.classList.add('flex');
     renderExpenseList();
     populateDefaultCurrencySelector();
-    populateSheetsUrlInput();
     initLucideIcons();
-}
-
-// Populate and handle Sheets URL input
-function populateSheetsUrlInput() {
-    const input = document.getElementById('sheets-url-input');
-    if (!input) return;
-
-    // Load current URL
-    const currentUrl = SheetsAPI.getUserAppsScriptUrl();
-    input.value = currentUrl || '';
-
-    // Handle changes with debounce
-    let debounceTimer;
-    input.onchange = () => {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            const newUrl = input.value.trim();
-            SheetsAPI.setUserAppsScriptUrl(newUrl);
-
-            if (newUrl) {
-                showToast(I18n.t('toast.sheetsUrlSaved'), 'success');
-            } else {
-                showToast(I18n.t('toast.sheetsUrlCleared'), 'info');
-            }
-        }, 500);
-    };
 }
 
 function closeSettingsModal() {
@@ -704,9 +677,6 @@ let userInfo;
 let userAvatar;
 let userName;
 let signOutBtn;
-let setupModal;
-let setupLaterBtn;
-let setupContinueBtn;
 
 // Toast notification system
 function showToast(message, type = 'success') {
@@ -802,27 +772,23 @@ async function handleSignedIn(user) {
     // Update user info display
     updateUserDisplay(user);
 
-    // Known users (primary + admin) skip setup and use the default Google Sheet
-    if (FirebaseAuth.isKnownUser()) {
-        // Mark as initialized
-        localStorage.setItem(FirebaseAuth.getUserStoragePrefix() + 'alex_expense_initialized', 'true');
-
-        // Show admin user switcher if admin
-        if (FirebaseAuth.isAdmin()) {
-            showAdminUserSwitcher();
-        }
-
-        await init();
-        showToast(I18n.t('toast.welcomeBack'), 'success');
-        return;
+    // Show admin user switcher if admin
+    if (FirebaseAuth.isAdmin()) {
+        showAdminUserSwitcher();
     }
 
     // Check if this is a new user (first sign-in)
     const isNewUser = !localStorage.getItem(FirebaseAuth.getUserStoragePrefix() + 'alex_expense_initialized');
 
     if (isNewUser) {
-        // Show setup modal for new users
-        showSetupModal(user);
+        // Initialize user's sheet tab (auto-provisions storage for non-known users)
+        await SheetsAPI.initUserSheet();
+
+        // Mark as initialized
+        localStorage.setItem(FirebaseAuth.getUserStoragePrefix() + 'alex_expense_initialized', 'true');
+
+        await init();
+        showToast(I18n.t('toast.welcome', { name: FirebaseAuth.getUserFirstName() }), 'success');
     } else {
         // Existing user, initialize app
         await init();
@@ -886,53 +852,6 @@ async function handleSignOut() {
     }
 }
 
-// Show setup modal for new users
-function showSetupModal(user) {
-    if (!setupModal) return;
-
-    // Set greeting with user's name
-    const setupGreeting = document.getElementById('setup-user-greeting');
-    if (setupGreeting) {
-        setupGreeting.textContent = I18n.t('setup.greeting', { name: FirebaseAuth.getUserFirstName() });
-    }
-
-    setupModal.classList.remove('hidden');
-    setupModal.classList.add('flex');
-    initLucideIcons();
-}
-
-// Hide setup modal
-function hideSetupModal() {
-    if (!setupModal) return;
-    setupModal.classList.add('hidden');
-    setupModal.classList.remove('flex');
-}
-
-// Handle "Setup Later" - continue without sheet setup
-async function handleSetupLater() {
-    hideSetupModal();
-
-    // Mark user as initialized
-    localStorage.setItem(FirebaseAuth.getUserStoragePrefix() + 'alex_expense_initialized', 'true');
-
-    await init();
-    showToast(I18n.t('setup.usingOffline'), 'info');
-}
-
-// Handle "Continue" - open settings for sheet URL
-async function handleSetupContinue() {
-    hideSetupModal();
-
-    // Mark user as initialized
-    localStorage.setItem(FirebaseAuth.getUserStoragePrefix() + 'alex_expense_initialized', 'true');
-
-    await init();
-
-    // Open settings modal so user can configure their sheet
-    setTimeout(() => {
-        openSettingsModal();
-    }, 500);
-}
 
 // ============ Admin User Switcher ============
 
@@ -2126,9 +2045,6 @@ document.addEventListener('DOMContentLoaded', () => {
     userAvatar = document.getElementById('user-avatar');
     userName = document.getElementById('user-name');
     signOutBtn = document.getElementById('sign-out-btn');
-    setupModal = document.getElementById('setup-modal');
-    setupLaterBtn = document.getElementById('setup-later-btn');
-    setupContinueBtn = document.getElementById('setup-continue-btn');
 
     // Set up bulk payment event listeners
     if (bulkPaymentBtn) {
@@ -2154,12 +2070,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (signOutBtn) {
         signOutBtn.addEventListener('click', handleSignOut);
-    }
-    if (setupLaterBtn) {
-        setupLaterBtn.addEventListener('click', handleSetupLater);
-    }
-    if (setupContinueBtn) {
-        setupContinueBtn.addEventListener('click', handleSetupContinue);
     }
 
     // Auto-select amount fields on focus (event delegation for dynamic inputs)

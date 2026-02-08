@@ -1,6 +1,6 @@
 # Alex Expense Tracker - Project Resume
 
-**Current Version: 2.12.4**
+**Current Version: 2.13.0**
 
 ## Quick Links
 
@@ -87,7 +87,7 @@ alex-expense-tracker/
 
 **js/config.js** contains:
 ```javascript
-APP_VERSION: '2.12.4'
+APP_VERSION: '2.13.0'
 FIREBASE_CONFIG: { apiKey, authDomain, projectId, ... }
 AUTH_ROLES: {
     PRIMARY_USER: 'lalexcubilla@gmail.com',
@@ -200,6 +200,7 @@ See **TODO.md** for expansion plans including multi-user support, templates, mob
 
 | Version | Changes |
 |---------|---------|
+| v2.13.0 | **Multi-tenant centralized Apps Script**: Auto-provisions per-user storage tabs, removes setup wizard, no user configuration needed |
 | v2.12.4 | Fix header overlapping with top controls bar on mobile |
 | v2.12.3 | Add favicon, always show admin switcher, hide unknown UIDs from dropdown |
 | v2.12.0 | **Google OAuth**: Firebase Auth with Google Sign-In replaces PIN/password, per-user data isolation, admin access for master account, user-configurable Google Sheets URL |

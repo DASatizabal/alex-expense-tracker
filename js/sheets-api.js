@@ -1,4 +1,5 @@
 // Google Apps Script API integration with localStorage fallback
+// Multi-tenant: routes requests to user-specific tabs via userId parameter
 
 const SheetsAPI = {
     // Session cache for payments data (in memory)
@@ -8,6 +9,9 @@ const SheetsAPI = {
     _syncStatus: 'synced',
     _lastSyncTime: null,
     _syncListeners: [],
+
+    // Whether user's sheet has been initialized
+    _sheetInitialized: false,
 
     // Subscribe to sync status changes
     onSyncStatusChange(callback) {
@@ -28,36 +32,29 @@ const SheetsAPI = {
         return { status: this._syncStatus, lastSync: this._lastSyncTime };
     },
 
-    // Check if Apps Script is configured (either global or user-specific)
+    // Check if Apps Script is configured
     isConfigured() {
-        const userUrl = this.getUserAppsScriptUrl();
-        return (userUrl && userUrl !== '') ||
-               (CONFIG.APPS_SCRIPT_URL && CONFIG.APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE');
+        return CONFIG.APPS_SCRIPT_URL && CONFIG.APPS_SCRIPT_URL !== 'YOUR_APPS_SCRIPT_URL_HERE';
     },
 
-    // Get user-specific Apps Script URL (if configured)
-    getUserAppsScriptUrl() {
-        const prefix = this._getStoragePrefix();
-        return localStorage.getItem(prefix + 'apps_script_url') || '';
-    },
-
-    // Set user-specific Apps Script URL
-    setUserAppsScriptUrl(url) {
-        const prefix = this._getStoragePrefix();
-        if (url) {
-            localStorage.setItem(prefix + 'apps_script_url', url);
-        } else {
-            localStorage.removeItem(prefix + 'apps_script_url');
-        }
-    },
-
-    // Get the active Apps Script URL (user-specific takes priority over global)
+    // Get the Apps Script URL (centralized, no user-specific URLs)
     getActiveAppsScriptUrl() {
-        const userUrl = this.getUserAppsScriptUrl();
-        if (userUrl && userUrl !== '') {
-            return userUrl;
-        }
         return CONFIG.APPS_SCRIPT_URL;
+    },
+
+    // Get userId for API calls
+    // Known users (primary + admin) return empty string to use default "Payments" tab
+    // Other users return their Firebase UID
+    _getUserIdParam() {
+        if (typeof FirebaseAuth !== 'undefined' && FirebaseAuth.isSignedIn()) {
+            // Known users use the default sheet (no userId param)
+            if (FirebaseAuth.isKnownUser()) {
+                return '';
+            }
+            // Other users get their own tab
+            return FirebaseAuth.getUserId() || '';
+        }
+        return '';
     },
 
     // Get storage key prefix (user-specific if signed in)
@@ -71,6 +68,43 @@ const SheetsAPI = {
     // Get user-scoped localStorage key
     _getStorageKey(key) {
         return this._getStoragePrefix() + key;
+    },
+
+    // Initialize user's sheet tab (called on first sign-in for non-known users)
+    async initUserSheet() {
+        if (!this.isConfigured() || CONFIG.USE_LOCAL_STORAGE) {
+            return { success: true, initialized: false };
+        }
+
+        const userId = this._getUserIdParam();
+
+        // Known users don't need initialization (they use the default sheet)
+        if (!userId) {
+            this._sheetInitialized = true;
+            return { success: true, initialized: false };
+        }
+
+        try {
+            const url = this.getActiveAppsScriptUrl() + '?action=init&userId=' + encodeURIComponent(userId);
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error('Failed to initialize user sheet');
+            }
+
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+
+            this._sheetInitialized = true;
+            return data;
+        } catch (error) {
+            console.error('Error initializing user sheet:', error);
+            // Continue with localStorage fallback
+            return { success: false, error: error.message };
+        }
     },
 
     // Get all payments from storage
@@ -94,7 +128,13 @@ const SheetsAPI = {
     async getPaymentsFromSheets() {
         this._setSyncStatus('syncing');
         try {
-            const url = this.getActiveAppsScriptUrl();
+            let url = this.getActiveAppsScriptUrl();
+            const userId = this._getUserIdParam();
+
+            if (userId) {
+                url += '?userId=' + encodeURIComponent(userId);
+            }
+
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -124,6 +164,10 @@ const SheetsAPI = {
             payment.id = this.generateId();
             payment.timestamp = new Date().toISOString();
 
+            // Add userId for routing to correct tab
+            const userId = this._getUserIdParam();
+            const payloadWithUser = { ...payment, userId };
+
             const url = this.getActiveAppsScriptUrl();
             // Use text/plain to avoid CORS preflight (Apps Script limitation)
             const response = await fetch(url, {
@@ -131,7 +175,7 @@ const SheetsAPI = {
                 headers: {
                     'Content-Type': 'text/plain'
                 },
-                body: JSON.stringify(payment),
+                body: JSON.stringify(payloadWithUser),
                 redirect: 'follow'
             });
 
@@ -156,7 +200,9 @@ const SheetsAPI = {
 
     async deletePaymentFromSheets(paymentId) {
         try {
+            const userId = this._getUserIdParam();
             const url = this.getActiveAppsScriptUrl();
+
             // Use text/plain to avoid CORS preflight (Apps Script limitation)
             const response = await fetch(url, {
                 method: 'POST',
@@ -165,7 +211,8 @@ const SheetsAPI = {
                 },
                 body: JSON.stringify({
                     action: 'delete',
-                    id: paymentId
+                    id: paymentId,
+                    userId: userId
                 }),
                 redirect: 'follow'
             });
@@ -193,6 +240,7 @@ const SheetsAPI = {
     // Clear session
     clearSession() {
         this._sessionCache = null;
+        this._sheetInitialized = false;
     },
 
     // Check if session is active
@@ -307,7 +355,9 @@ const SheetsAPI = {
     async updatePaymentInSheets(paymentId, updates) {
         this._setSyncStatus('syncing');
         try {
+            const userId = this._getUserIdParam();
             const url = this.getActiveAppsScriptUrl();
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -316,7 +366,8 @@ const SheetsAPI = {
                 body: JSON.stringify({
                     action: 'update',
                     id: paymentId,
-                    updates: updates
+                    updates: updates,
+                    userId: userId
                 }),
                 redirect: 'follow'
             });
