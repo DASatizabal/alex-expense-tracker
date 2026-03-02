@@ -1,10 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Push subscriptions: only authenticated primary user can read/write
+    // Push subscriptions: primary user and admin can read/write
     match /push_subscriptions/{subId} {
       allow read, write: if request.auth != null
-        && request.auth.token.email == 'lalexcubilla@gmail.com';
+        && (request.auth.token.email == 'lalexcubilla@gmail.com'
+            || request.auth.token.email == 'dasatizabal@gmail.com');
     }
 
     // Expense config: primary user and admin can write
