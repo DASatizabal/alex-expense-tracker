@@ -1,11 +1,11 @@
-// Firebase Cloud Messaging (FCM) Manager
-// Handles push notification registration, token storage, and expense config sync
+// Web Push Notification Manager
+// Uses standard Web Push API (PushManager) instead of Firebase Cloud Messaging
+// Same public API as before — app.js requires zero changes
 
 const FCMManager = {
-    _messaging: null,
     _firestore: null,
     _initialized: false,
-    _token: null,
+    _subscription: null,
 
     async init() {
         if (this._initialized) return;
@@ -13,37 +13,32 @@ const FCMManager = {
         // Only initialize for the primary user or admin
         if (!FirebaseAuth.isSignedIn() || (!FirebaseAuth.isPrimaryUser() && !FirebaseAuth.isAdmin())) return;
 
-        // Check if Firebase Messaging is available
-        if (typeof firebase.messaging !== 'function') {
-            console.warn('Firebase Messaging SDK not loaded');
-            return;
-        }
-
         try {
-            this._messaging = firebase.messaging();
             this._firestore = firebase.firestore();
             this._initialized = true;
 
-            // Listen for foreground messages
-            this._messaging.onMessage((payload) => {
-                this._handleForegroundMessage(payload);
+            // Listen for messages from service worker (foreground toasts)
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'PUSH_NOTIFICATION') {
+                    this._handleForegroundMessage(event.data);
+                }
             });
 
             // Update bell icon state
             this._updateBellIcon();
         } catch (err) {
-            console.error('FCM init error:', err);
+            console.error('Push notification init error:', err);
         }
     },
 
     async requestPermissionAndRegister() {
         if (!this._initialized) await this.init();
-        if (!this._messaging) return;
+        if (!this._firestore) return;
 
         // Check if notifications are supported
-        if (!('Notification' in window)) {
-            console.warn('Notifications not supported in this browser');
-            showToast('Notifications not supported in this browser', 'error');
+        if (!('Notification' in window) || !('PushManager' in window)) {
+            console.warn('Push notifications not supported in this browser');
+            showToast('Push notifications not supported in this browser', 'error');
             return;
         }
 
@@ -57,44 +52,47 @@ const FCMManager = {
 
         try {
             // Get the service worker registration
-            const swReg = await navigator.serviceWorker.getRegistration();
-            if (!swReg) {
-                console.error('No service worker registration found');
-                return;
-            }
+            const swReg = await navigator.serviceWorker.ready;
 
-            const token = await this._messaging.getToken({
-                vapidKey: FCM_VAPID_KEY,
-                serviceWorkerRegistration: swReg
+            // Convert VAPID key from base64url to Uint8Array
+            const applicationServerKey = this._urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+
+            // Subscribe using standard PushManager
+            const subscription = await swReg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: applicationServerKey
             });
 
-            if (token) {
-                this._token = token;
-                await this._saveToken(token);
-                await this.syncExpenseConfig();
-                this._updateBellIcon();
-                console.log('FCM token registered successfully');
-            }
+            this._subscription = subscription;
+            await this._saveSubscription(subscription);
+            await this.syncExpenseConfig();
+            this._updateBellIcon();
+            console.log('Push subscription registered successfully');
         } catch (err) {
-            console.error('FCM token registration error:', err);
+            console.error('Push subscription error:', err);
             showToast('Failed to enable notifications: ' + err.message, 'error');
         }
     },
 
-    async _saveToken(token) {
+    async _saveSubscription(subscription) {
         const user = FirebaseAuth.getCurrentUser();
         if (!user || !this._firestore) return;
 
         try {
-            await this._firestore.collection('fcm_tokens').doc(token).set({
+            // Use endpoint hash as document ID for uniqueness
+            const subJson = subscription.toJSON();
+            const docId = btoa(subJson.endpoint).replace(/[/+=]/g, '_').substring(0, 128);
+
+            await this._firestore.collection('push_subscriptions').doc(docId).set({
                 uid: user.uid,
                 email: user.email,
-                token: token,
+                endpoint: subJson.endpoint,
+                keys: subJson.keys,
                 userAgent: navigator.userAgent,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
         } catch (err) {
-            console.error('Error saving FCM token:', err);
+            console.error('Error saving push subscription:', err);
         }
     },
 
@@ -121,9 +119,9 @@ const FCMManager = {
         }
     },
 
-    _handleForegroundMessage(payload) {
-        const title = payload.notification?.title || 'Expense Reminder';
-        const body = payload.notification?.body || '';
+    _handleForegroundMessage(data) {
+        const title = data.title || 'Expense Reminder';
+        const body = data.body || '';
         showToast(`${title}: ${body}`, 'info');
     },
 
@@ -143,5 +141,17 @@ const FCMManager = {
 
     isNotificationEnabled() {
         return 'Notification' in window && Notification.permission === 'granted';
+    },
+
+    // Convert base64url-encoded VAPID key to Uint8Array for PushManager
+    _urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
     }
 };

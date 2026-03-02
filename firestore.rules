@@ -1,8 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // FCM tokens: only authenticated primary user can read/write
-    match /fcm_tokens/{tokenId} {
+    // Push subscriptions: only authenticated primary user can read/write
+    match /push_subscriptions/{subId} {
       allow read, write: if request.auth != null
         && request.auth.token.email == 'lalexcubilla@gmail.com';
     }

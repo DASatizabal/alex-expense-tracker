@@ -1,17 +1,20 @@
 const { onSchedule } = require('firebase-functions/v2/scheduler');
+const { defineSecret } = require('firebase-functions/params');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore } = require('firebase-admin/firestore');
-const { getMessaging } = require('firebase-admin/messaging');
+const webpush = require('web-push');
+
+// VAPID keys from Cloud Function secrets
+const VAPID_PUBLIC_KEY = defineSecret('VAPID_PUBLIC_KEY');
+const VAPID_PRIVATE_KEY = defineSecret('VAPID_PRIVATE_KEY');
 
 let app = null;
 let db = null;
-let messaging = null;
 
 function ensureInitialized() {
     if (!app) {
         app = initializeApp();
         db = getFirestore();
-        messaging = getMessaging();
     }
 }
 
@@ -26,10 +29,18 @@ exports.checkExpenseDues = onSchedule(
     {
         schedule: '0 8 * * *',
         timeZone: 'America/New_York',
-        region: 'us-central1'
+        region: 'us-central1',
+        secrets: [VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY]
     },
     async (event) => {
         ensureInitialized();
+
+        // Configure web-push with VAPID details
+        webpush.setVapidDetails(
+            'mailto:dasatizabal@gmail.com',
+            VAPID_PUBLIC_KEY.value(),
+            VAPID_PRIVATE_KEY.value()
+        );
 
         try {
             // 1. Load expense config from Firestore
@@ -62,46 +73,50 @@ exports.checkExpenseDues = onSchedule(
                 return;
             }
 
-            // 4. Get all FCM tokens
-            const tokensSnapshot = await db.collection('fcm_tokens').get();
-            const tokens = tokensSnapshot.docs.map(doc => doc.data().token);
+            // 4. Get all push subscriptions
+            const subsSnapshot = await db.collection('push_subscriptions').get();
 
-            if (tokens.length === 0) {
+            if (subsSnapshot.empty) {
                 console.log('No registered devices');
                 return;
             }
 
             // 5. Send notifications
+            let totalSent = 0;
+            let totalFailed = 0;
+
             for (const notif of notifications) {
-                const message = {
-                    notification: {
-                        title: notif.title,
-                        body: notif.body
-                    },
-                    data: {
-                        expenseId: notif.expenseId,
-                        type: notif.type
-                    },
-                    tokens: tokens
-                };
+                const payload = JSON.stringify({
+                    title: notif.title,
+                    body: notif.body,
+                    expenseId: notif.expenseId,
+                    type: notif.type
+                });
 
-                const response = await messaging.sendEachForMulticast(message);
-                console.log(`Notification "${notif.title}": ${response.successCount} sent, ${response.failureCount} failed`);
+                for (const doc of subsSnapshot.docs) {
+                    const subData = doc.data();
+                    const pushSubscription = {
+                        endpoint: subData.endpoint,
+                        keys: subData.keys
+                    };
 
-                // Clean up invalid tokens
-                response.responses.forEach((resp, idx) => {
-                    if (!resp.success) {
-                        const error = resp.error;
-                        if (error?.code === 'messaging/invalid-registration-token' ||
-                            error?.code === 'messaging/registration-token-not-registered') {
-                            console.log(`Removing invalid token: ${tokens[idx].substring(0, 20)}...`);
-                            db.collection('fcm_tokens').doc(tokens[idx]).delete();
+                    try {
+                        await webpush.sendNotification(pushSubscription, payload);
+                        totalSent++;
+                    } catch (err) {
+                        totalFailed++;
+                        // Auto-delete expired/invalid subscriptions
+                        if (err.statusCode === 410 || err.statusCode === 404) {
+                            console.log(`Removing expired subscription: ${doc.id}`);
+                            await db.collection('push_subscriptions').doc(doc.id).delete();
+                        } else {
+                            console.error(`Push send error (${err.statusCode}):`, err.message);
                         }
                     }
-                });
+                }
             }
 
-            console.log(`Sent ${notifications.length} notification type(s) to ${tokens.length} device(s)`);
+            console.log(`Sent ${totalSent} notifications, ${totalFailed} failed across ${notifications.length} notification type(s)`);
 
         } catch (error) {
             console.error('Error in checkExpenseDues:', error);
