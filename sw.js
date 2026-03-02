@@ -1,6 +1,6 @@
 // Firebase Cloud Messaging support
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/11.10.0/firebase-messaging-compat.js');
 
 // Initialize Firebase in the service worker
 firebase.initializeApp({
@@ -57,7 +57,7 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 // Service Worker for Alex's Expense Tracker
-const CACHE_NAME = 'expense-tracker-v4';
+const CACHE_NAME = 'expense-tracker-v5';
 const ASSETS_TO_CACHE = [
     '/alex-expense-tracker/',
     '/alex-expense-tracker/index.html',
