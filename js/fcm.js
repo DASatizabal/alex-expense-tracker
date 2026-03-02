@@ -85,7 +85,14 @@ const FCMManager = {
         if (!user || !this._firestore) return;
 
         try {
-            // Use endpoint hash as document ID for uniqueness
+            // Delete any existing subscriptions for this user to prevent duplicates
+            const existing = await this._firestore.collection('push_subscriptions')
+                .where('email', '==', user.email).get();
+            const batch = this._firestore.batch();
+            existing.docs.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+
+            // Save the new subscription
             const subJson = subscription.toJSON();
             const docId = btoa(subJson.endpoint).replace(/[/+=]/g, '_').substring(0, 128);
 
@@ -96,7 +103,7 @@ const FCMManager = {
                 keys: subJson.keys,
                 userAgent: navigator.userAgent,
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
+            });
         } catch (err) {
             console.error('Error saving push subscription:', err);
         }
