@@ -802,8 +802,8 @@ async function handleSignedIn(user) {
         showToast(I18n.t('toast.welcomeBack'), 'success');
     }
 
-    // Set up push notifications for primary user
-    if (FirebaseAuth.isPrimaryUser() && typeof FCMManager !== 'undefined') {
+    // Set up push notifications for primary user or admin
+    if ((FirebaseAuth.isPrimaryUser() || FirebaseAuth.isAdmin()) && typeof FCMManager !== 'undefined') {
         // Show the notification bell button
         const bellBtn = document.getElementById('notification-bell');
         if (bellBtn) bellBtn.classList.remove('hidden');

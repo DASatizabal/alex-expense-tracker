@@ -10,8 +10,8 @@ const FCMManager = {
     async init() {
         if (this._initialized) return;
 
-        // Only initialize for the primary user
-        if (!FirebaseAuth.isSignedIn() || !FirebaseAuth.isPrimaryUser()) return;
+        // Only initialize for the primary user or admin
+        if (!FirebaseAuth.isSignedIn() || (!FirebaseAuth.isPrimaryUser() && !FirebaseAuth.isAdmin())) return;
 
         // Check if Firebase Messaging is available
         if (typeof firebase.messaging !== 'function') {
@@ -77,7 +77,7 @@ const FCMManager = {
             }
         } catch (err) {
             console.error('FCM token registration error:', err);
-            showToast('Failed to enable notifications', 'error');
+            showToast('Failed to enable notifications: ' + err.message, 'error');
         }
     },
 
