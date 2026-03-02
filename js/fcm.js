@@ -54,6 +54,12 @@ const FCMManager = {
             // Get the service worker registration
             const swReg = await navigator.serviceWorker.ready;
 
+            // Unsubscribe from any existing subscription (e.g. old FCM key)
+            const existingSub = await swReg.pushManager.getSubscription();
+            if (existingSub) {
+                await existingSub.unsubscribe();
+            }
+
             // Convert VAPID key from base64url to Uint8Array
             const applicationServerKey = this._urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
 
