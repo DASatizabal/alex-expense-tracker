@@ -257,6 +257,13 @@ function saveExpenseConfig() {
     };
     const storageKey = getUserStorageKey('alex_expense_config');
     localStorage.setItem(storageKey, JSON.stringify(config));
+
+    // Sync expense config to Firestore for Cloud Function access
+    if (typeof FCMManager !== 'undefined' && FCMManager._initialized) {
+        FCMManager.syncExpenseConfig().catch(err =>
+            console.error('Error syncing expense config to Firestore:', err)
+        );
+    }
 }
 
 function getExpenses() {
@@ -793,6 +800,20 @@ async function handleSignedIn(user) {
         // Existing user, initialize app
         await init();
         showToast(I18n.t('toast.welcomeBack'), 'success');
+    }
+
+    // Set up push notifications for primary user
+    if (FirebaseAuth.isPrimaryUser() && typeof FCMManager !== 'undefined') {
+        // Show the notification bell button
+        const bellBtn = document.getElementById('notification-bell');
+        if (bellBtn) bellBtn.classList.remove('hidden');
+
+        // Auto-register if permission was already granted
+        if (Notification.permission === 'granted') {
+            FCMManager.requestPermissionAndRegister().catch(err =>
+                console.error('FCM auto-register error:', err)
+            );
+        }
     }
 }
 

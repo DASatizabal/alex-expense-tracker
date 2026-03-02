@@ -1,0 +1,10 @@
+specVersion: v1alpha1
+requiredAPIs: []
+endpoints:
+  checkExpenseDues:
+    scheduleTrigger:
+      schedule: "0 8 * * *"
+      timeZone: "America/New_York"
+    region: us-central1
+    platform: gcfv2
+    entryPoint: checkExpenseDues

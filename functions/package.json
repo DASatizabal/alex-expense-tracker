@@ -1,0 +1,13 @@
+{
+  "name": "alex-expense-tracker-functions",
+  "description": "Cloud Functions for expense notification reminders",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.7.0",
+    "firebase-functions": "^7.0.6"
+  },
+  "private": true
+}

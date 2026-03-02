@@ -27,6 +27,9 @@ const FIREBASE_CONFIG = {
     appId: "1:559944565083:web:e173c14c9714b4933dda7e"
 };
 
+// FCM Web Push VAPID Key (from Firebase Console > Project Settings > Cloud Messaging)
+const FCM_VAPID_KEY = 'BIlFozhMDBDuj83R2bgaoWDjeoce8BptqR6HieVAuckFjcB1jyMPbdloUlNqV5n5mzmtp-FZSB0VNQjXYkgOrHg';
+
 // Supported currencies
 const CURRENCIES = {
     USD: { symbol: '$', code: 'USD', name: 'US Dollar', locale: 'en-US' },

@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // FCM tokens: only authenticated primary user can read/write
+    match /fcm_tokens/{tokenId} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email == 'lalexcubilla@gmail.com';
+    }
+
+    // Expense config: primary user and admin can write
+    match /expense_config/{docId} {
+      allow read, write: if request.auth != null
+        && (request.auth.token.email == 'lalexcubilla@gmail.com'
+            || request.auth.token.email == 'dasatizabal@gmail.com');
+    }
+  }
+}
