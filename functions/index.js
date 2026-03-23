@@ -33,16 +33,15 @@ exports.checkExpenseDues = onSchedule(
         secrets: [VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY]
     },
     async (event) => {
-        ensureInitialized();
-
-        // Configure web-push with VAPID details
-        webpush.setVapidDetails(
-            'mailto:dasatizabal@gmail.com',
-            VAPID_PUBLIC_KEY.value(),
-            VAPID_PRIVATE_KEY.value()
-        );
-
         try {
+            ensureInitialized();
+
+            // Configure web-push with VAPID details
+            webpush.setVapidDetails(
+                'mailto:dasatizabal@gmail.com',
+                VAPID_PUBLIC_KEY.value(),
+                VAPID_PRIVATE_KEY.value()
+            );
             // 1. Load expense config from Firestore
             const configDoc = await db.collection('expense_config')
                 .doc('primary_user').get();
