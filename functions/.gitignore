@@ -1,0 +1,15 @@
+# Node.js dependencies (installed via `npm install`, never committed)
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Firebase emulator / deploy cache
+.firebase/
+
+# Local env files
+.env
+.env.local
+*.local
